@@ -1,0 +1,77 @@
+/* Tailwind v4 — explicitly skip preflight to preserve original inline styles.
+   Only theme tokens + utilities are imported. No CSS reset. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* ─── CSS variables (port dari THEME lama di store-app.jsx) ─── */
+:root {
+  /* Soft Cloud / Y2K Bubble palette */
+  --bg: #FFF8F2;
+  --surface: #FFFFFF;
+  --surface-2: #f0eee9;
+  --ink: #1A1626;
+  --ink-soft: #5A5168;
+  --primary: #FF6B9D;
+  --primary-ink: #FFFFFF;
+  --mint: #7FE7C7;
+  --lilac: #C5A3FF;
+  --peach: #FFC97A;
+  --sky: #9FD4FF;
+  --border: #E8DFD3;
+  --shadow: rgba(26, 22, 38, 0.08);
+
+  /* Typography fallbacks — kalau next/font belum siap (FOUT), pakai system font.
+     Variable sebenarnya (--font-body, --font-display, dst.) di-inject lewat
+     next/font/google via className di <html>. Lihat app/fonts.ts. */
+  --font-fallback-sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-fallback-serif: Georgia, 'Times New Roman', serif;
+  --font-fallback-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Minimal base reset (NOT Tailwind preflight) — sama seperti yang ada di Toko Akun.html lama */
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body, var(--font-fallback-sans));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar (port dari Toko Akun.html) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 999px; }
+
+/* ─── Keyframes (port dari kode lama: Toko Akun.html + lapakurab-shared.jsx) ─── */
+@keyframes lkToastIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+@keyframes lkSkeleton {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+@keyframes lkFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes tk-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes tk-pop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes tk-toast {
+  0%   { transform: translate(-50%, 30px); opacity: 0; }
+  100% { transform: translate(-50%, 0);    opacity: 1; }
+}
+@keyframes marq {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
