@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Toko Akun — Digital Goods Marketplace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#f0eee9">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="360" y="240" width="480" height="320" rx="48" fill="#22304A"/>
+    <circle cx="600" cy="380" r="56" fill="#FF6B9D"/>
+    <rect x="500" y="460" width="200" height="20" rx="10" fill="#FAF7F1"/>
+    <rect x="540" y="500" width="120" height="14" rx="7" fill="#FAF7F1" opacity="0.6"/>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f0eee9; font-family: 'DM Sans', system-ui, sans-serif; }
+  @keyframes tk-spin { to { transform: rotate(360deg); } }
+  @keyframes tk-pop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes tk-toast { 0% { transform: translate(-50%, 30px); opacity: 0; } 100% { transform: translate(-50%, 0); opacity: 1; } }
+  @keyframes marq { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="lapakurab-shared.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="store-app.jsx"></script>
+<script type="text/babel" src="admin-app.jsx"></script>
+<script type="text/babel" src="admin-app2.jsx"></script>
+<script type="text/babel" src="acid-variant.jsx"></script>
+<script type="text/babel" src="cloud-variant.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "currency": "IDR",
+  "dark": false,
+  "font": "clean"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [hash, setHash] = React.useState(() => window.location.hash);
+  React.useEffect(() => {
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Admin panel mounted via #admin
+  if (hash.startsWith('#admin')) {
+    return (
+      <ToastProvider>
+        <AdminRoot />
+      </ToastProvider>
+    );
+  }
+
+  return (
+    <ToastProvider>
+      <DesignCanvas>
+        <DCSection id="main" title="Soft Cloud — Main Prototype" subtitle="Calm cream + sky blue · Friendly & trustworthy · Full 7-screen flow">
+          <DCArtboard id="full-app" label="lapakurab_ · click around" width={1280} height={900}>
+            <StoreApp currency={t.currency} dark={t.dark} font={t.font} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="variants" title="Alternative directions (for reference)" subtitle="Earlier explorations">
+          <DCArtboard id="acid" label="Acid Pop — brutalist editorial" width={1280} height={900}>
+            <AcidPopApp currency={t.currency} />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel>
+        <TweakSection label="Currency" />
+        <TweakRadio label="Mata uang" value={t.currency}
+          options={['IDR','USD']}
+          onChange={(v) => setTweak('currency', v)} />
+        <TweakSection label="Theme (main app)" />
+        <TweakToggle label="Dark mode" value={t.dark}
+          onChange={(v) => setTweak('dark', v)} />
+        <TweakSection label="Typography (main app)" />
+        <TweakRadio label="Font pairing" value={t.font}
+          options={['groovy','editorial','clean']}
+          onChange={(v) => setTweak('font', v)} />
+      </TweaksPanel>
+    </ToastProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
