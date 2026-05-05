@@ -1,0 +1,71 @@
+# ════════════════════════════════════════════════════════════════════════
+#  lapakurab — Caddy reverse proxy config
+# ────────────────────────────────────────────────────────────────────────
+#  Copy ke /etc/caddy/Caddyfile, edit domain, lalu:
+#    sudo systemctl reload caddy
+#
+#  Caddy auto-handle:
+#    - HTTPS (Let's Encrypt cert auto-renew)
+#    - HTTP/2 + HTTP/3
+#    - HTTP → HTTPS redirect
+#    - gzip/zstd compression
+# ════════════════════════════════════════════════════════════════════════
+
+# GANTI ke domain asli kamu
+lapakurab.id, www.lapakurab.id {
+
+    # ─── Compression ────────────────────────────────────────────────────
+    encode zstd gzip
+
+    # ─── Reverse proxy ke Next.js (PM2 di port 3000) ────────────────────
+    reverse_proxy localhost:3000 {
+        # Forward asli client IP (overridden by CF-Connecting-IP di app)
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # Trust headers dari Cloudflare (kalau orange-cloud di-aktifkan)
+        # Caddy 2.x default sudah pass header semua, ini explicit aja.
+    }
+
+    # ─── Static asset cache (Next.js _next/static immutable) ────────────
+    @nextStatic path /_next/static/*
+    header @nextStatic Cache-Control "public, max-age=31536000, immutable"
+
+    # ─── Security headers (defense-in-depth, juga ada di next.config) ───
+    header {
+        # Hapus header server reveal
+        -Server
+        # HSTS (1 tahun, include subdomains, preload-eligible)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent MIME sniff
+        X-Content-Type-Options "nosniff"
+        # Frame protection (clickjacking)
+        X-Frame-Options "DENY"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Permissions policy
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    # ─── Logging ────────────────────────────────────────────────────────
+    log {
+        output file /var/log/caddy/lapakurab-access.log {
+            roll_size 50mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+    }
+}
+
+# ════════════════════════════════════════════════════════════════════════
+#  CATATAN
+# ────────────────────────────────────────────────────────────────────────
+#  - DNS WAJIB sudah point ke IP VPS sebelum reload Caddy (untuk cert).
+#  - Kalau pakai Cloudflare proxy (orange cloud), ada 2 opsi:
+#      A. Set DNS-only (grey cloud) saat first cert issuance, baru aktifkan
+#         orange cloud.
+#      B. Pakai Cloudflare Origin Cert (manual) — lebih ribet tapi independent.
+#    Recommend opsi A.
+#  - Kalau cert gagal issue, cek: sudo journalctl -u caddy -n 50
+# ════════════════════════════════════════════════════════════════════════

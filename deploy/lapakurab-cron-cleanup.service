@@ -1,0 +1,26 @@
+# systemd service: lapakurab-cron-cleanup
+# Replaces vercel.json crons.cleanup-pending entry.
+#
+# Install:
+#   sudo cp deploy/lapakurab-cron-cleanup.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now lapakurab-cron-cleanup.timer
+#
+# Inspect:
+#   sudo systemctl list-timers
+#   sudo journalctl -u lapakurab-cron-cleanup -n 20
+
+[Unit]
+Description=lapakurab cleanup-pending cron (hit /api/cron/cleanup-pending)
+After=network.target
+
+[Service]
+Type=oneshot
+User=deploy
+# Read CRON_SECRET dari file env (chmod 600). Format: CRON_SECRET=xxx
+EnvironmentFile=/srv/lapakurab/deploy/cron.env
+ExecStart=/usr/bin/curl -fsS -X POST \
+  -H "Authorization: Bearer ${CRON_SECRET}" \
+  http://localhost:3000/api/cron/cleanup-pending
+# Timeout — kalau cron lambat, fail
+TimeoutStartSec=30

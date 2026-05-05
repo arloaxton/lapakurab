@@ -20,6 +20,10 @@ const supabaseHost = getSupabaseHost();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Standalone output: bikin server bundle minimal di .next/standalone
+  // (cuma file yang benar-benar dipakai). Cocok untuk VPS/Docker deploy.
+  // PM2 jalankan `node .next/standalone/server.js`.
+  output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: supabaseHost

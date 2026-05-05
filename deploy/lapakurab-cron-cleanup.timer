@@ -1,0 +1,16 @@
+# systemd timer: trigger lapakurab-cron-cleanup tiap 10 menit.
+# Match dengan vercel.json schedule "*/10 * * * *".
+
+[Unit]
+Description=Run lapakurab cleanup-pending every 10 minutes
+Requires=lapakurab-cron-cleanup.service
+
+[Timer]
+# Tiap 10 menit dari boot, persistent (catch-up kalau down)
+OnBootSec=2min
+OnUnitActiveSec=10min
+Unit=lapakurab-cron-cleanup.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

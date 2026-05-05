@@ -119,8 +119,17 @@ export async function rateLimit(opts: RateLimitOptions): Promise<RateLimitResult
   }
 }
 
-/** Helper: extract client IP dari request headers (Vercel/standard). */
+/**
+ * Helper: extract client IP dari request headers.
+ * Order of preference:
+ *   1. CF-Connecting-IP (Cloudflare) — paling akurat kalau di belakang CF
+ *   2. X-Forwarded-For (standard, behind proxy/Caddy/Nginx) — first entry
+ *   3. X-Real-IP (Nginx style)
+ *   4. "unknown" fallback
+ */
 export function getClientIP(req: Request): string {
+  const cfIP = req.headers.get("cf-connecting-ip");
+  if (cfIP) return cfIP.trim();
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
   const realIp = req.headers.get("x-real-ip");
