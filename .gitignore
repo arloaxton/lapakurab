@@ -50,3 +50,6 @@ next-env.d.ts
 # Claude Code (personal — JANGAN commit)
 .claude/settings.local.json
 .mcp.json
+
+# Deploy temp folder (local helper scripts berisi password + env)
+.deploy-tmp/

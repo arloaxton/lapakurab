@@ -272,55 +272,6 @@ function LoginInner() {
               </Link>
             </div>
           </form>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              margin: "20px 0",
-              color: "var(--ink-soft)",
-              fontSize: 11,
-            }}
-          >
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-            <span>atau</span>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setUser({ id: "u-self", name: "Member Google", email: "demo@google.com" });
-              router.push(next);
-            }}
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: 14,
-              cursor: "pointer",
-              border: "1.5px solid var(--border)",
-              background: "var(--surface)",
-              fontWeight: 600,
-              fontSize: 14,
-              fontFamily: "inherit",
-              color: "var(--ink)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-            }}
-          >
-            <span
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg,#4285F4,#EA4335,#FBBC05,#34A853)",
-              }}
-            />
-            Lanjut dengan Google
-          </button>
         </div>
       </div>
     </div>
