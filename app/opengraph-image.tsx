@@ -128,7 +128,7 @@ export default async function OpenGraphImage() {
               }}
             />
             <span style={{ fontWeight: 600, color: "#1A1626" }}>
-              4.812 verified customers
+              Pengiriman instan 24/7
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -143,10 +143,10 @@ export default async function OpenGraphImage() {
                 letterSpacing: "0.02em",
               }}
             >
-              4.9 / 5
+              100%
             </span>
             <span style={{ fontWeight: 600, color: "#1A1626" }}>
-              rating customer
+              akun original
             </span>
           </div>
         </div>

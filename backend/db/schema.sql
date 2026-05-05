@@ -170,18 +170,9 @@ create policy "admins write products"
   with check (public.is_admin(auth.uid()));
 
 -- ════════════════════════════════════════════════════════════════════════
---  Seed data — 8 produk awal (mirror lib/mock/products.ts)
+--  Seed data dihapus — production starts dengan tabel kosong.
+--  Admin tambahkan produk via /admin/products → Add product.
 -- ════════════════════════════════════════════════════════════════════════
-insert into public.products (id, name, cat, tagline, price_idr, old_idr, stock, rating, reviews, durations, hue, emoji, active) values
-  ('p1', 'Streamflix Premium', 'streaming', '4K UHD · 4 Profil', 25000, 55000, 12, 4.9, 1284, array['1 Bulan','3 Bulan','6 Bulan','1 Tahun'], 340, '▶', true),
-  ('p2', 'Tunify Family', 'streaming', 'Musik tanpa iklan · 6 akun', 18000, 42000, 8, 4.8, 932, array['1 Bulan','3 Bulan','6 Bulan'], 140, '♪', true),
-  ('p3', 'CloudVPN Pro', 'vpn', '80+ negara · No-log', 15000, 35000, 24, 4.7, 512, array['1 Bulan','6 Bulan','1 Tahun','2 Tahun'], 220, '◈', true),
-  ('p4', 'Disnia+ Hotstart', 'streaming', 'Marvel · Star Wars · Pixar', 22000, 49000, 5, 4.9, 2104, array['1 Bulan','3 Bulan','1 Tahun'], 265, '✦', true),
-  ('p5', 'YouTune Premium', 'streaming', 'No ads · Background play', 12000, 28000, 31, 4.8, 1876, array['1 Bulan','3 Bulan','6 Bulan','1 Tahun'], 10, '▷', true),
-  ('p6', 'NordSecure VPN', 'vpn', '5500+ server · Kill switch', 20000, 48000, 17, 4.6, 743, array['1 Bulan','1 Tahun','2 Tahun'], 200, '◇', true),
-  ('p7', 'HBO Mix', 'streaming', 'Series premium · Original', 28000, 60000, 3, 4.9, 654, array['1 Bulan','3 Bulan'], 285, '◉', true),
-  ('p8', 'Surfly VPN Lite', 'vpn', 'Ringan & cepat · 1 device', 9000, 22000, 42, 4.5, 298, array['1 Bulan','3 Bulan','6 Bulan'], 170, '≈', false)
-on conflict (id) do nothing;
 
 -- ════════════════════════════════════════════════════════════════════════
 --  orders (Phase 2A)
@@ -548,12 +539,13 @@ create trigger gateways_set_updated_at
   before update on public.gateways
   for each row execute function public.set_updated_at();
 
--- Seed initial gateways (idempotent — kalau sudah ada, skip)
+-- Seed initial gateways (api_key kosong — admin set via /admin/gateways).
+-- Fee adalah default; sesuaikan dengan kontrak gateway aktual.
 insert into public.gateways (id, name, enabled, fee, api_key) values
-  ('qris', 'QRIS', true, 0.7, 'qr_live_xxxxxxxxx'),
-  ('gopay', 'GoPay', true, 2.0, 'gp_live_xxxxxxxxx'),
-  ('ovo', 'OVO', true, 2.0, 'ovo_live_xxxxxxxx'),
-  ('dana', 'DANA', true, 1.5, 'dn_live_xxxxxxxxx'),
+  ('qris', 'QRIS', true, 0.7, ''),
+  ('gopay', 'GoPay', true, 2.0, ''),
+  ('ovo', 'OVO', true, 2.0, ''),
+  ('dana', 'DANA', true, 1.5, ''),
   ('shopeepay', 'ShopeePay', false, 2.0, '')
 on conflict (id) do nothing;
 

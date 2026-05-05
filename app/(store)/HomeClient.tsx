@@ -1,30 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { ProductTile } from "@/components/store/ProductTile";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Footer } from "@/components/store/Footer";
 import { useStore } from "@/components/store/StoreProvider";
 import type { Product } from "@/lib/types";
-
-const TICKER_NAMES = [
-  "Rina",
-  "Dimas",
-  "Anita",
-  "Bagas",
-  "Sari",
-  "Yoga",
-  "Mira",
-  "Adit",
-];
-const TICKER_PRODUCTS = [
-  "Streamflix Premium",
-  "CloudVPN Pro",
-  "Tunify Family",
-  "Disnia+ Hotstart",
-  "YouTune Premium",
-];
 
 interface Props {
   products: Product[];
@@ -33,12 +14,6 @@ interface Props {
 export default function HomeClient({ products }: Props) {
   const { fmt } = useStore();
   const featured = products.slice(0, 4);
-  const [tickerIdx, setTickerIdx] = useState(0);
-
-  useEffect(() => {
-    const t = setInterval(() => setTickerIdx((i) => i + 1), 2800);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px" }}>
@@ -110,7 +85,7 @@ export default function HomeClient({ products }: Props) {
                   boxShadow: "0 0 0 3px rgba(34,197,94,0.25)",
                 }}
               />
-              4.812 verified customers · live
+              Pengiriman instan · 24/7
             </div>
             <h1
               className="lk-h1-hero"
@@ -261,64 +236,6 @@ export default function HomeClient({ products }: Props) {
         </div>
       </section>
 
-      {/* Live ticker */}
-      <div
-        className="lk-ticker"
-        style={{
-          background: "var(--surface)",
-          borderRadius: 18,
-          padding: "14px 20px",
-          marginBottom: 32,
-          border: "1.5px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "4px 10px",
-            borderRadius: 6,
-            background: "#FEE2E2",
-            color: "#DC2626",
-            fontWeight: 800,
-            fontSize: 11,
-            letterSpacing: "0.05em",
-            flexShrink: 0,
-          }}
-        >
-          ● LIVE
-        </div>
-        <div style={{ flex: 1, position: "relative", height: 20, overflow: "hidden" }}>
-          {[0, 1, 2].map((off) => {
-            const idx = (tickerIdx + off) % TICKER_NAMES.length;
-            const pIdx = (tickerIdx + off) % TICKER_PRODUCTS.length;
-            return (
-              <div
-                key={tickerIdx + "_" + off}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  opacity: off === 1 ? 1 : 0,
-                  transform: `translateY(${(off - 1) * -20}px)`,
-                  transition: "all 0.5s",
-                  fontSize: 13,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                <strong style={{ color: "var(--ink)" }}>{TICKER_NAMES[idx]}</strong>{" "}
-                baru saja membeli{" "}
-                <strong style={{ color: "var(--primary)" }}>{TICKER_PRODUCTS[pIdx]}</strong>{" "}
-                · 2 menit lalu
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Categories */}
       <h2
         className="lk-h2-section"
@@ -433,9 +350,9 @@ export default function HomeClient({ products }: Props) {
         }}
       >
         {[
-          { num: "4.812", label: "Pelanggan aktif" },
-          { num: "15.290+", label: "Order sukses" },
-          { num: "4.9★", label: "Rating rata-rata" },
+          { num: "100%", label: "Akun original" },
+          { num: "Instan", label: "Pengiriman" },
+          { num: "Garansi", label: "Selama langganan" },
           { num: "24/7", label: "Customer support" },
         ].map((s) => (
           <div key={s.label}>

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ProductTile } from "@/components/store/ProductTile";
 import { Footer } from "@/components/store/Footer";
 import { useStore } from "@/components/store/StoreProvider";
-import { REVIEWS } from "@/lib/mock";
 import type { Product } from "@/lib/types";
 
 const DUR_MULTIPLIER: Record<string, number> = {
@@ -215,10 +214,6 @@ export default function ProductDetailClient({ product }: Props) {
             <strong style={{ color: "var(--ink)" }}>{product.rating}</strong>
             <span style={{ color: "var(--ink-soft)", fontSize: 14 }}>
               ({product.reviews.toLocaleString("id-ID")} ulasan)
-            </span>
-            <span style={{ color: "var(--ink-soft)" }}>·</span>
-            <span style={{ color: "#22C55E", fontSize: 14, fontWeight: 600 }}>
-              {product.reviews + 200}+ terjual
             </span>
           </div>
 
@@ -600,65 +595,18 @@ export default function ProductDetailClient({ product }: Props) {
             )}
 
             {tab === "reviews" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {REVIEWS.map((r, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      padding: 16,
-                      background: "var(--surface)",
-                      borderRadius: 16,
-                      border: "1.5px solid var(--border)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: "50%",
-                          background: `linear-gradient(135deg, oklch(0.85 0.12 ${i * 80}), oklch(0.75 0.14 ${(i * 80 + 60) % 360}))`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontWeight: 800,
-                        }}
-                      >
-                        {r.name[0]}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: "var(--ink)" }}>
-                          {r.name}
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>
-                          {r.when}
-                        </div>
-                      </div>
-                      <div style={{ marginLeft: "auto" }}>
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <span
-                            key={s}
-                            style={{
-                              color: s <= r.rating ? "#F59E0B" : "#E5E5E5",
-                              fontSize: 14,
-                            }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 14, color: "var(--ink)" }}>{r.text}</div>
-                  </div>
-                ))}
+              <div
+                style={{
+                  padding: 32,
+                  background: "var(--surface)",
+                  borderRadius: 16,
+                  border: "1.5px solid var(--border)",
+                  textAlign: "center",
+                  color: "var(--ink-soft)",
+                  fontSize: 14,
+                }}
+              >
+                Belum ada ulasan untuk produk ini. Jadilah yang pertama!
               </div>
             )}
 

@@ -40,9 +40,9 @@ export default function AboutPage() {
         }}
       >
         {[
-          { num: "4.812", label: "Pelanggan aktif" },
-          { num: "15.290+", label: "Order sukses" },
-          { num: "4.9★", label: "Rating rata-rata" },
+          { num: "100%", label: "Akun original" },
+          { num: "Instan", label: "Pengiriman" },
+          { num: "Garansi", label: "Selama langganan" },
           { num: "24/7", label: "Customer support" },
         ].map((s) => (
           <div
