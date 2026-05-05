@@ -3,6 +3,7 @@ import {
   Space_Grotesk,
   Fraunces,
   JetBrains_Mono,
+  Plus_Jakarta_Sans,
 } from "next/font/google";
 
 export const fontBody = DM_Sans({
@@ -33,9 +34,18 @@ export const fontMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Admin display font (overrides --font-display inside /admin route group)
+export const fontAdminDisplay = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-admin-display",
+  display: "swap",
+});
+
 export const fontVariables = [
   fontBody.variable,
   fontDisplay.variable,
   fontEditorial.variable,
   fontMono.variable,
+  fontAdminDisplay.variable,
 ].join(" ");

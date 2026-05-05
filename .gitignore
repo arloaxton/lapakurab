@@ -46,3 +46,7 @@ next-env.d.ts
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea/
+
+# Claude Code (personal — JANGAN commit)
+.claude/settings.local.json
+.mcp.json

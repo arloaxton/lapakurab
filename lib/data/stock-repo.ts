@@ -1,0 +1,192 @@
+/**
+ * Stock repository — server-side query layer untuk pool kredensial.
+ *
+ * Mock fallback aktif kalau Supabase belum di-konfig.
+ */
+
+import type { StockItem } from "@/lib/types";
+import { SEED_STOCK } from "@/lib/mock/stock";
+import { isSupabaseConfigured } from "@/backend/env";
+import type {
+  BulkCreateStockInput,
+  CreateStockItemInput,
+  StockStatus,
+  UpdateStockItemInput,
+} from "@/backend/schemas/stock";
+
+export interface StockRow {
+  id: string;
+  product_id: string;
+  email: string;
+  password: string;
+  status: StockStatus;
+  order_id: string | null;
+  added_at: string;
+  sold_at: string | null;
+}
+
+function rowToStock(r: StockRow): StockItem {
+  return {
+    id: r.id,
+    productId: r.product_id,
+    email: r.email,
+    password: r.password,
+    status: r.status,
+    addedAt: r.added_at.slice(0, 10),
+  };
+}
+
+export interface ClaimedCredential {
+  id: string;
+  email: string;
+  password: string;
+}
+
+// ─── List ───────────────────────────────────────────────────────────────
+
+export interface ListStockOpts {
+  productId?: string;
+  status?: StockStatus;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listStock(opts: ListStockOpts = {}): Promise<StockItem[]> {
+  if (!isSupabaseConfigured()) {
+    let list = SEED_STOCK.slice();
+    if (opts.productId) list = list.filter((s) => s.productId === opts.productId);
+    if (opts.status) list = list.filter((s) => s.status === opts.status);
+    if (opts.offset) list = list.slice(opts.offset);
+    if (opts.limit) list = list.slice(0, opts.limit);
+    return list;
+  }
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  let q = sb.from("stock_items").select("*").order("added_at", { ascending: false });
+  if (opts.productId) q = q.eq("product_id", opts.productId);
+  if (opts.status) q = q.eq("status", opts.status);
+  if (opts.limit) q = q.range(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit - 1);
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  return ((data as StockRow[] | null) ?? []).map(rowToStock);
+}
+
+// ─── Create (single) ────────────────────────────────────────────────────
+
+export async function createStockItem(input: CreateStockItemInput): Promise<StockItem> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase belum di-konfig — createStockItem tidak tersedia di mode mock.");
+  }
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  const id = "s" + Date.now() + Math.random().toString(36).slice(2, 6);
+  const insertRow: Record<string, unknown> = {
+    id,
+    product_id: input.productId,
+    email: input.email,
+    password: input.password,
+    status: input.status ?? "available",
+  };
+  const { data, error } = await sb.from("stock_items").insert(insertRow).select().single();
+  if (error) throw new Error(error.message);
+  return rowToStock(data as StockRow);
+}
+
+// ─── Bulk create ────────────────────────────────────────────────────────
+
+export async function bulkCreateStock(input: BulkCreateStockInput): Promise<StockItem[]> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase belum di-konfig — bulkCreateStock tidak tersedia di mode mock.");
+  }
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  const baseTs = Date.now();
+  const rows = input.items.map((it, i) => ({
+    id: "s" + baseTs + i + Math.random().toString(36).slice(2, 4),
+    product_id: input.productId,
+    email: it.email,
+    password: it.password,
+    status: "available" as StockStatus,
+  }));
+  const { data, error } = await sb.from("stock_items").insert(rows).select();
+  if (error) throw new Error(error.message);
+  return ((data as StockRow[] | null) ?? []).map(rowToStock);
+}
+
+// ─── Update ─────────────────────────────────────────────────────────────
+
+export async function updateStockItem(
+  id: string,
+  patch: UpdateStockItemInput
+): Promise<StockItem> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase belum di-konfig — updateStockItem tidak tersedia di mode mock.");
+  }
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  const dbPatch: Record<string, unknown> = {};
+  if (patch.status !== undefined) dbPatch.status = patch.status;
+  if (patch.email !== undefined) dbPatch.email = patch.email;
+  if (patch.password !== undefined) dbPatch.password = patch.password;
+  const { data, error } = await sb
+    .from("stock_items")
+    .update(dbPatch)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return rowToStock(data as StockRow);
+}
+
+// ─── Delete ─────────────────────────────────────────────────────────────
+
+export async function deleteStockItem(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase belum di-konfig — deleteStockItem tidak tersedia di mode mock.");
+  }
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  const { error } = await sb.from("stock_items").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+// ─── Claim stock for an order (atomic via RPC) ──────────────────────────
+
+export async function claimStockForOrder(
+  orderId: string,
+  productId: string
+): Promise<ClaimedCredential | null> {
+  if (!isSupabaseConfigured()) return null;
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  const { data, error } = await sb.rpc("claim_stock", {
+    p_order_id: orderId,
+    p_product_id: productId,
+  });
+  if (error) throw new Error(error.message);
+  if (!data || (Array.isArray(data) && data.length === 0)) return null;
+  const row = (Array.isArray(data) ? data[0] : data) as ClaimedCredential;
+  return row;
+}
+
+// ─── Read credentials linked to user's own orders (RLS-protected) ───────
+
+export async function listMyCredentials(): Promise<
+  Array<{ orderId: string; email: string; password: string }>
+> {
+  if (!isSupabaseConfigured()) return [];
+  const { getServerClient } = await import("@/backend/db/server-client");
+  const sb = await getServerClient();
+  // RLS: user only sees stock_items where order belongs to them
+  const { data, error } = await sb
+    .from("stock_items")
+    .select("email, password, order_id")
+    .not("order_id", "is", null);
+  if (error) throw new Error(error.message);
+  type Row = { email: string; password: string; order_id: string };
+  return ((data as Row[] | null) ?? []).map((r) => ({
+    orderId: r.order_id,
+    email: r.email,
+    password: r.password,
+  }));
+}

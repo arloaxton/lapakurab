@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Cancel previous run kalau ada commit baru di branch yang sama
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-build:
+    name: Lint + typecheck + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          # Dummy env supaya build pass — production env disuntik via Vercel.
+          # Build tidak butuh real Supabase; lib/data/*-repo fallback ke mock.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_anon_key_for_build
+          SUPABASE_SERVICE_ROLE_KEY: dummy_service_role_key_for_build
+          NEXT_PUBLIC_SITE_URL: https://example.com
+          CRON_SECRET: dummy_cron_secret_for_build_only_64_chars_long_dummy_dummy_xx

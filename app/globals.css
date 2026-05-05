@@ -20,6 +20,31 @@
   --sky: #9FD4FF;
   --border: #E8DFD3;
   --shadow: rgba(26, 22, 38, 0.08);
+}
+
+/* Storefront dark mode — toggled via <html data-theme="dark"> */
+html[data-theme="dark"] {
+  --bg: #14101A;
+  --surface: #1E1928;
+  --surface-2: #271F33;
+  --ink: #F1ECF5;
+  --ink-soft: #A8A0B8;
+  --primary: #FF6B9D;
+  --primary-ink: #FFFFFF;
+  --mint: #7FE7C7;
+  --lilac: #C5A3FF;
+  --peach: #FFC97A;
+  --sky: #9FD4FF;
+  --border: #34293D;
+  --shadow: rgba(0, 0, 0, 0.4);
+}
+
+/* Avoid the dark-mode tokens leaking into /admin (it sets its own theme) */
+html[data-theme="dark"] body :where(.lk-admin-shell, .lk-admin-shell *) {
+  /* admin layout already applies its own theme tokens via inline style */
+}
+
+:root {
 
   /* Typography fallbacks — kalau next/font belum siap (FOUT), pakai system font.
      Variable sebenarnya (--font-body, --font-display, dst.) di-inject lewat
@@ -40,6 +65,58 @@ body {
   font-family: var(--font-body, var(--font-fallback-sans));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Accessibility: focus ring (keyboard only) ──────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
+  border-radius: 6px;
+}
+/* Don't show outline on click for mouse users */
+:focus:not(:focus-visible) { outline: none; }
+
+/* Skip-to-content link — only visible when focused */
+.lk-skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 8px 14px;
+  background: var(--ink);
+  color: white;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 10000;
+  transform: translateY(-200%);
+  transition: transform 0.15s;
+}
+.lk-skip-link:focus {
+  transform: translateY(0);
+}
+
+/* sr-only — hide visually but keep for screen readers */
+.lk-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Scrollbar (port dari Toko Akun.html) */
@@ -74,4 +151,658 @@ body {
 @keyframes marq {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-100%); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   RESPONSIVE UTILITIES
+   ──────────────────────────────────────────────────────────────────────
+   Di-pasang di komponen via className. Inline-style asli tetap dipertahankan
+   untuk visual lain; class ini cuma override grid-template-columns / display
+   pada breakpoint mobile.
+
+   Breakpoints:
+     md  ≤ 900px  (tablet & below)
+     sm  ≤ 768px  (phablet & below)
+     xs  ≤ 480px  (phone)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page container — auto adjust padding ────────────────────────────── */
+.lk-page { max-width: 1280px; margin: 0 auto; padding: 24px; }
+@media (max-width: 768px) {
+  .lk-page { padding: 16px; }
+}
+
+/* ── Sidebar layouts (sidebar + main) ────────────────────────────────── */
+.lk-sidebar-main {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+}
+.lk-sidebar-narrow {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+}
+@media (max-width: 900px) {
+  .lk-sidebar-main, .lk-sidebar-narrow {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  /* Kalau sidebar di-mark sticky, drop sticky on mobile */
+  .lk-sidebar-main > aside,
+  .lk-sidebar-narrow > aside {
+    position: static !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* ── Cart / checkout: main + summary ─────────────────────────────────── */
+.lk-cart-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+}
+.lk-checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+}
+@media (max-width: 900px) {
+  .lk-cart-grid, .lk-checkout-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ── Hero (1.3fr 1fr) → stack ────────────────────────────────────────── */
+.lk-hero-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .lk-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ── Hero card padding shrink on mobile ──────────────────────────────── */
+.lk-hero-card { padding: 56px 48px; }
+@media (max-width: 768px) {
+  .lk-hero-card { padding: 28px 22px; border-radius: 22px; }
+}
+
+/* ── 50/50 split (auth, product detail) → stack ──────────────────────── */
+.lk-split-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .lk-split-2 {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ── Generic responsive grids ────────────────────────────────────────── */
+.lk-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.lk-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.lk-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.lk-grid-auto-280 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+/* Product cards grid — selalu 1 col di mobile (cards lebih lebar = enak baca) */
+.lk-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .lk-grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .lk-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .lk-products-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .lk-grid-2 { grid-template-columns: 1fr; }
+  .lk-grid-3 { grid-template-columns: 1fr; }
+  .lk-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .lk-grid-auto-280 { grid-template-columns: 1fr; }
+  .lk-products-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Footer 2fr 1fr 1fr 1fr → 2 col → 1 col ──────────────────────────── */
+.lk-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+@media (max-width: 900px) {
+  .lk-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}
+@media (max-width: 540px) {
+  .lk-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+/* ── Show/hide helpers ───────────────────────────────────────────────── */
+.lk-hide-mobile { }
+.lk-mobile-only { display: none !important; }
+@media (max-width: 768px) {
+  .lk-hide-mobile { display: none !important; }
+  .lk-mobile-only { display: flex !important; }
+}
+
+/* ── Hero h1 — shrink on mobile ──────────────────────────────────────── */
+.lk-h1-hero {
+  font-size: 64px;
+  line-height: 0.95;
+}
+@media (max-width: 768px) {
+  .lk-h1-hero {
+    font-size: 36px;
+    line-height: 1.05;
+  }
+}
+
+/* ── Section h1 (catalog title etc.) ─────────────────────────────────── */
+.lk-h1-page { font-size: 48px; }
+@media (max-width: 768px) { .lk-h1-page { font-size: 32px; } }
+
+.lk-h1-mid { font-size: 42px; }
+@media (max-width: 768px) { .lk-h1-mid { font-size: 28px; } }
+
+/* ── Product detail image gallery → smaller on mobile ────────────────── */
+.lk-product-tile-wrap {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── Stepper checkout → vertical-friendly on small ───────────────────── */
+@media (max-width: 540px) {
+  .lk-stepper { flex-wrap: wrap; }
+  .lk-stepper-line { display: none !important; }
+}
+
+/* ── Order table — desktop tabel, mobile card layout ─────────────────── */
+.lk-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.lk-table-grid-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 100px 70px;
+}
+
+/* ── TableShell — desktop default, mobile cards hidden ───────────────── */
+.lk-cards-mobile { display: none; }
+.lk-table-desktop { display: block; }
+
+@media (max-width: 768px) {
+  /* Swap: hide table, show cards */
+  .lk-table-desktop { display: none !important; }
+  .lk-cards-mobile {
+    display: block !important;
+    padding: 12px;
+  }
+  /* Make outer wrapper transparent so cards have their own bg */
+  .lk-table-shell {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .lk-mobile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .lk-mobile-card[data-selected="true"] {
+    background: rgba(91, 124, 250, 0.06);
+    border-color: var(--primary);
+  }
+  .lk-mobile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+  .lk-mobile-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .lk-mobile-card-kv {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+  }
+  .lk-mobile-card-key {
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .lk-mobile-card-val {
+    text-align: right;
+    color: var(--ink);
+    font-size: 13px;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .lk-mobile-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  /* Inner button row inside actions cell — keep gap consistent */
+  .lk-mobile-card-actions > div {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Dashboard "Riwayat order" — di mobile jadi card vertical */
+.lk-orders-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 100px 70px;
+}
+@media (max-width: 768px) {
+  /* Hide table header */
+  .lk-orders-head { display: none !important; }
+
+  /* Each row becomes a "card" with grid areas */
+  .lk-orders-row {
+    grid-template-columns: 1fr auto auto !important;
+    grid-template-areas:
+      "prod   prod   action"
+      "id     date   date"
+      "total  status status" !important;
+    column-gap: 10px !important;
+    row-gap: 8px !important;
+    padding: 14px !important;
+    min-width: 0 !important;
+    align-items: center;
+  }
+  .lk-orders-row > :nth-child(1) {
+    grid-area: prod;
+    min-width: 0;
+  }
+  .lk-orders-row > :nth-child(2) {
+    grid-area: id;
+    font-size: 11px !important;
+    align-self: center;
+  }
+  .lk-orders-row > :nth-child(3) {
+    grid-area: date;
+    font-size: 11px !important;
+    text-align: right;
+    align-self: center;
+  }
+  .lk-orders-row > :nth-child(4) {
+    grid-area: total;
+    font-size: 15px !important;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    align-self: center;
+  }
+  .lk-orders-row > :nth-child(5) {
+    grid-area: status;
+    justify-self: end;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    align-self: center;
+    text-align: right;
+  }
+  .lk-orders-row > :nth-child(6) {
+    grid-area: action;
+    justify-self: end;
+  }
+}
+
+/* ── Admin shell — desktop: flex row, mobile: drawer overlay ─────────── */
+
+/* Hamburger button — mobile only */
+.lk-admin-hamburger { display: none; }
+
+/* Drawer close (X) — mobile only inside sidebar header */
+.lk-admin-drawer-close { display: none; }
+
+/* Backdrop — visible only when drawer open on mobile */
+.lk-admin-backdrop { display: none; }
+
+@media (max-width: 900px) {
+  /* Hamburger appears on mobile */
+  .lk-admin-hamburger {
+    display: inline-flex !important;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--ink);
+    flex-shrink: 0;
+    padding: 0;
+    font-family: inherit;
+  }
+  .lk-admin-hamburger:hover { background: var(--surface-2); }
+
+  /* Sidebar becomes a drawer — fixed left, slide in/out */
+  .lk-admin-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
+    border-right: 1px solid var(--border) !important;
+    border-bottom: 0 !important;
+  }
+  .lk-admin-sidebar[data-open="true"] {
+    transform: translateX(0);
+  }
+
+  /* Make sidebar nav vertical (override prior horizontal scroll attempt) */
+  .lk-admin-sidebar nav {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-wrap: nowrap !important;
+    padding: 12px !important;
+  }
+  .lk-admin-sidebar nav > a {
+    flex-shrink: 0;
+    width: 100% !important;
+    margin-bottom: 2px !important;
+  }
+
+  /* Backdrop overlay */
+  .lk-admin-backdrop[data-open="true"] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 99;
+    animation: lkFadeIn 200ms ease-out;
+  }
+
+  /* Close (X) button shows inside drawer header */
+  .lk-admin-drawer-close {
+    display: inline-flex !important;
+  }
+  .lk-admin-drawer-close:hover {
+    background: var(--surface-2) !important;
+  }
+
+  /* Content area uses full width (sidebar is fixed = out of flex flow) */
+  .lk-admin-content {
+    padding: 18px !important;
+  }
+}
+
+/* When sidebar drawer is open, lock background scroll */
+body.lk-no-scroll { overflow: hidden; }
+
+/* ── Admin dashboard 2fr/1fr (chart + top products) ──────────────────── */
+@media (max-width: 768px) {
+  .lk-admin-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Admin user-detail 2fr/1fr (orders table + notes) ────────────────── */
+@media (max-width: 900px) {
+  .lk-admin-2col-wide {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Compare modal table responsive ──────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-compare-modal { padding: 8px !important; }
+}
+
+/* ── Auth visual side hide on small ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .lk-auth-visual { display: none !important; }
+}
+
+/* ── TopBar mobile tweaks ────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .lk-topbar-inner {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+  }
+  .lk-topbar-search {
+    flex-basis: 100%;
+    max-width: none !important;
+    margin-left: 0 !important;
+    order: 3;
+  }
+  .lk-topbar-cart-text { display: none !important; }
+}
+@media (max-width: 420px) {
+  .lk-topbar-nav-text { display: none !important; }
+}
+
+/* ── Dashboard — sidebar collapse ────────────────────────────────────── */
+@media (max-width: 900px) {
+  .lk-dash-sidebar {
+    position: static !important;
+    width: 100% !important;
+  }
+}
+
+/* ── Catalog filter — 4 sort chips wrap ──────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-sort-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .lk-sort-bar > div:last-child {
+    flex-wrap: wrap;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 2 — Mobile fine-tuning
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Section heading h2 (kategori populer, best sellers, dll) ────────── */
+.lk-h2-section { font-size: 32px; }
+@media (max-width: 540px) {
+  .lk-h2-section { font-size: 22px !important; margin-bottom: 12px !important; }
+}
+
+/* ── Hero CTA buttons ────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-hero-cta {
+    padding: 12px 18px !important;
+    font-size: 14px !important;
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ── Hero featured rotating cards → simple grid 2-col on mobile ──────── */
+@media (max-width: 768px) {
+  .lk-hero-featured {
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+  .lk-hero-featured > * {
+    position: static !important;
+    transform: none !important;
+  }
+  .lk-hero-featured > * > div { width: 100% !important; }
+}
+
+/* ── Trust strip stat numbers ────────────────────────────────────────── */
+.lk-stat-num { font-size: 36px; }
+@media (max-width: 768px) {
+  .lk-stat-num { font-size: 22px !important; }
+}
+@media (max-width: 540px) {
+  .lk-trust-strip {
+    padding: 18px !important;
+    gap: 12px !important;
+    margin-top: 28px !important;
+  }
+}
+
+/* ── Cart line items: stack on small ─────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-cart-line {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  .lk-cart-info { flex-basis: calc(100% - 96px); min-width: 0; }
+  .lk-cart-qty, .lk-cart-del { margin-left: auto; }
+}
+
+/* ── Checkout payment method items shrink ────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-pay-item { padding: 10px !important; gap: 10px !important; }
+  .lk-pay-item-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+  }
+  .lk-pay-item-tag { display: none !important; }
+}
+
+/* ── OTP input boxes ─────────────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .lk-otp-input {
+    width: 38px !important;
+    height: 50px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* ── Compare bar (sticky bottom) responsive ──────────────────────────── */
+@media (max-width: 540px) {
+  .lk-compare-bar {
+    flex-wrap: wrap !important;
+    bottom: 12px !important;
+    padding: 8px 12px !important;
+    gap: 10px !important;
+    max-width: calc(100vw - 16px) !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* ── Live ticker shrink ──────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-ticker { padding: 10px 14px !important; font-size: 11px !important; }
+}
+
+/* ── Hero pill / tagline shrink ──────────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-hero-tagline { font-size: 14px !important; }
+  .lk-hero-pill { font-size: 10px !important; padding: 4px 10px !important; }
+}
+
+/* ── Product detail — disable sticky on mobile ───────────────────────── */
+@media (max-width: 900px) {
+  .lk-product-sticky {
+    position: static !important;
+    top: auto !important;
+    padding: 20px !important;
+  }
+}
+
+/* ── Cta row (+ Keranjang / Beli Sekarang) shrink ────────────────────── */
+@media (max-width: 540px) {
+  .lk-cta-row > button {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ── Admin topbar mobile (hide user info & store link on tiny) ───────── */
+@media (max-width: 640px) {
+  .lk-admin-topbar { padding: 0 14px !important; gap: 6px !important; }
+  .lk-admin-topbar-user { display: none !important; }
+  .lk-admin-topbar-store { display: none !important; }
+}
+
+/* ── Admin login form padding shrink ─────────────────────────────────── */
+@media (max-width: 420px) {
+  .lk-admin-login-form { padding: 24px 18px !important; }
+}
+
+/* ── Reviews card padding shrink ─────────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-review-card { padding: 12px !important; }
+}
+
+/* ── Smaller H2 in dashboard sections ────────────────────────────────── */
+@media (max-width: 540px) {
+  .lk-dash-h1 { font-size: 22px !important; }
+}
+
+/* ── Langganan aktif card — clean mobile layout ──────────────────────── */
+@media (max-width: 540px) {
+  .lk-sub-header {
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  .lk-sub-days-num {
+    font-size: 15px !important;
+  }
+  .lk-sub-days > div:last-child {
+    font-size: 10px !important;
+  }
+}
+
+/* ── Subscriptions credentials grid — tighter on phone ───────────────── */
+@media (max-width: 380px) {
+  .lk-sub-creds {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
 }
