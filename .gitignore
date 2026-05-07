@@ -53,3 +53,5 @@ next-env.d.ts
 
 # Deploy temp folder (local helper scripts berisi password + env)
 .deploy-tmp/
+*.exe
+Claude Setup.exe

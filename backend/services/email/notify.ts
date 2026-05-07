@@ -3,7 +3,7 @@
  * Best-effort — caller boleh `.catch(() => {})` tanpa risk crash.
  */
 
-import { sendEmail } from "./resend";
+import { sendEmail } from "./sender";
 import { credentialEmailHTML, credentialEmailText } from "./templates";
 import { getSettings } from "@/lib/data/settings-repo";
 import { env } from "../../env";

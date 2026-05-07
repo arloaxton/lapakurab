@@ -32,9 +32,16 @@ const TOKOPAY_IP_WHITELIST = TOKOPAY_IP_WHITELIST_RAW
   ? TOKOPAY_IP_WHITELIST_RAW.split(",").map((s) => s.trim()).filter(Boolean)
   : [];
 
-// Email (transactional via Resend) — server-only
+// Email — dual mode: SMTP (Postfix VPS) atau Resend HTTP API
+// SMTP prioritas pertama kalau SMTP_HOST di-set; fallback ke Resend kalau
+// RESEND_API_KEY di-set; kalau dua-duanya kosong, sendEmail no-op.
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || "";
 const EMAIL_FROM = process.env.EMAIL_FROM?.trim() || "";
+const SMTP_HOST = process.env.SMTP_HOST?.trim() || "";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT?.trim() || "25", 10);
+const SMTP_USER = process.env.SMTP_USER?.trim() || "";
+const SMTP_PASS = process.env.SMTP_PASS?.trim() || "";
+const SMTP_SECURE = process.env.SMTP_SECURE?.trim() === "true";
 
 // Cron auth (for /api/cron/*) + Rate limiter (Upstash Redis REST)
 const CRON_SECRET = process.env.CRON_SECRET?.trim() || "";
@@ -61,6 +68,11 @@ export const env = {
   TOKOPAY_IP_WHITELIST,
   RESEND_API_KEY,
   EMAIL_FROM,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  SMTP_SECURE,
   CRON_SECRET,
   UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN,
@@ -81,8 +93,12 @@ export function isTokopayIpWhitelistEnforced(): boolean {
   return TOKOPAY_IP_WHITELIST.length > 0;
 }
 
+export function isSmtpConfigured(): boolean {
+  return Boolean(SMTP_HOST && EMAIL_FROM);
+}
+
 export function isEmailConfigured(): boolean {
-  return Boolean(RESEND_API_KEY && EMAIL_FROM);
+  return isSmtpConfigured() || Boolean(RESEND_API_KEY && EMAIL_FROM);
 }
 
 export function isRateLimiterConfigured(): boolean {
