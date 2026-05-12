@@ -23,8 +23,6 @@ export interface CredentialFormatDef {
   id: string;
   /** Display name di dropdown admin product form. */
   label: string;
-  /** Penjelasan singkat — muncul di hint dropdown. */
-  hint: string;
   /** Layout label per field. Kalau field tidak di-define = hidden di form. */
   fields: {
     field1?: FieldDef;
@@ -38,7 +36,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "email_password",
     label: "Email + Password",
-    hint: "Cocok untuk Netflix, Spotify, Disney+, dll",
     fields: {
       field1: { label: "Email", required: true, placeholder: "user@mail.com" },
       field2: { label: "Password", required: true, placeholder: "password", sensitive: true },
@@ -48,7 +45,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "email_pin",
     label: "Email + PIN",
-    hint: "Cocok untuk game (Mobile Legends, Free Fire, dll)",
     fields: {
       field1: { label: "Email / Username", required: true, placeholder: "user@mail.com" },
       field2: { label: "PIN", required: true, placeholder: "1234", sensitive: true },
@@ -58,7 +54,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "email_profile_pin",
     label: "Email + Profil + PIN",
-    hint: "Cocok untuk Netflix sharing (akses 1 profil)",
     fields: {
       field1: { label: "Email", required: true, placeholder: "user@mail.com" },
       field2: { label: "Profil", required: true, placeholder: "Profile 1" },
@@ -69,7 +64,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "key_only",
     label: "License Key",
-    hint: "Cocok untuk Windows, Office, software license",
     fields: {
       field1: { label: "License Key / Serial", required: true, placeholder: "XXXX-XXXX-XXXX-XXXX", sensitive: true },
       notes: { label: "Catatan / cara aktivasi", required: false, multiline: true },
@@ -78,7 +72,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "link_only",
     label: "Link / URL",
-    hint: "Cocok untuk gift card, voucher redeem URL",
     fields: {
       field1: { label: "Link / URL", required: true, placeholder: "https://..." },
       notes: { label: "Catatan / cara redeem", required: false, multiline: true },
@@ -87,7 +80,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "cookie",
     label: "Cookie / Session",
-    hint: "Cocok untuk Netflix cookie share, ChatGPT session",
     fields: {
       field1: { label: "Cookie / Session JSON", required: true, placeholder: "[{...}] atau sesssion=...", multiline: true, sensitive: true },
       notes: { label: "Catatan / cara import", required: false, multiline: true },
@@ -96,7 +88,6 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
   {
     id: "custom",
     label: "Custom (3 field bebas)",
-    hint: "Untuk produk dengan format unik",
     fields: {
       field1: { label: "Field 1", required: true, placeholder: "value 1" },
       field2: { label: "Field 2 (opsional)", required: false, placeholder: "value 2" },

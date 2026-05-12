@@ -263,7 +263,7 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
         >
           {CREDENTIAL_FORMATS.map((f) => (
             <option key={f.id} value={f.id}>
-              {f.label} — {f.hint}
+              {f.label}
             </option>
           ))}
         </select>

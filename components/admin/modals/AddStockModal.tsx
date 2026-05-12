@@ -195,7 +195,6 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
         }}
       >
         <strong style={{ color: "var(--ink)" }}>Format: {formatDef.label}</strong>
-        <div style={{ marginTop: 4 }}>{formatDef.hint}</div>
       </div>
 
       <Field
