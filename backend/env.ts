@@ -55,6 +55,12 @@ const SENTRY_DSN = process.env.SENTRY_DSN?.trim() || "";
 const NEXT_PUBLIC_SENTRY_DSN =
   process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() || "";
 
+// Tempmail (project terpisah) — untuk auto-fetch OTP Netflix dari inbox.
+// URL contoh: https://lapakrab.com. API key format: msk_live_*
+const TEMPMAIL_BASE_URL =
+  process.env.TEMPMAIL_BASE_URL?.trim().replace(/\/$/, "") || "";
+const TEMPMAIL_API_KEY = process.env.TEMPMAIL_API_KEY?.trim() || "";
+
 const NODE_ENV = process.env.NODE_ENV?.trim() || "development";
 
 export const env = {
@@ -76,10 +82,16 @@ export const env = {
   CRON_SECRET,
   UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN,
+  TEMPMAIL_BASE_URL,
+  TEMPMAIL_API_KEY,
   SENTRY_DSN,
   NEXT_PUBLIC_SENTRY_DSN,
   NODE_ENV,
 };
+
+export function isTempmailConfigured(): boolean {
+  return Boolean(env.TEMPMAIL_BASE_URL && env.TEMPMAIL_API_KEY);
+}
 
 export function isProduction(): boolean {
   return NODE_ENV === "production";

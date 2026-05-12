@@ -7,6 +7,7 @@ import { useStore } from "@/components/store/StoreProvider";
 import { ProductTile } from "@/components/store/ProductTile";
 import { AuthFormField } from "@/components/store/AuthFormField";
 import { ChangePasswordModal } from "@/components/store/ChangePasswordModal";
+import { NetflixOtpButton } from "@/components/store/NetflixOtpButton";
 import { useToast } from "@/components/shared/ToastProvider";
 import { Pagination } from "@/components/shared/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -1014,6 +1015,11 @@ function DashboardInner() {
                           {expiringSoon ? "Perpanjang sekarang" : "Perpanjang"}
                         </button>
                       </div>
+
+                      {/* Auto-fetch OTP Netflix kalau product = Netflix */}
+                      {/netflix/i.test(o.product) && (
+                        <NetflixOtpButton orderId={o.id} />
+                      )}
                     </div>
                   );
                 })}
