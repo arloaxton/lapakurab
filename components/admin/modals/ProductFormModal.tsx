@@ -142,7 +142,14 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onSave(form);
+      // DB constraint: old_idr >= price_idr. Kalau admin gak isi harga
+      // coret (oldIDR=0), inherit dari priceIDR supaya tidak ada strike
+      // di UI tapi constraint tetap pass.
+      const payload: Product = {
+        ...form,
+        oldIDR: form.oldIDR > 0 ? form.oldIDR : form.priceIDR,
+      };
+      await onSave(payload);
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Gagal simpan");
     } finally {
@@ -290,7 +297,7 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
         <Field
           label="Harga coret (IDR)"
           error={touched.oldIDR ? errors.oldIDR : null}
-          hint={!touched.oldIDR ? "Untuk menampilkan diskon" : undefined}
+          hint={!touched.oldIDR ? "Untuk diskon (harus > harga jual). Kosongkan/0 = tanpa diskon" : undefined}
         >
           <input
             type="number"
