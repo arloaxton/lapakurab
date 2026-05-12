@@ -80,7 +80,19 @@ export async function middleware(request: NextRequest) {
   });
 
   // Trigger session refresh — internally Supabase akan refresh kalau perlu
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Auth-aware redirect: user sudah login → /login atau /register akan
+  // redirect ke /dashboard (atau ?next=... kalau ada query).
+  const path = request.nextUrl.pathname;
+  const isAuthOnlyPage = path === "/login" || path === "/register";
+  if (user && isAuthOnlyPage) {
+    const nextParam = request.nextUrl.searchParams.get("next");
+    const target = nextParam && nextParam.startsWith("/") ? nextParam : "/dashboard";
+    return NextResponse.redirect(new URL(target, request.url));
+  }
 
   return response;
 }
