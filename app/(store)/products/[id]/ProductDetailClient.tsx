@@ -17,9 +17,15 @@ const DUR_MULTIPLIER: Record<string, number> = {
 
 interface Props {
   product: Product;
+  stockPrivate: number;
+  stockSharing: number;
 }
 
-export default function ProductDetailClient({ product }: Props) {
+export default function ProductDetailClient({
+  product,
+  stockPrivate,
+  stockSharing,
+}: Props) {
   const router = useRouter();
   const { addToCart, fmt } = useStore();
 
@@ -32,7 +38,17 @@ export default function ProductDetailClient({ product }: Props) {
   const [activeThumb, setActiveThumb] = useState(0);
   // accountType: hanya bisa "sharing" kalau produk punya priceSharingIDR.
   const hasSharing = Boolean(product.priceSharingIDR && product.priceSharingIDR > 0);
-  const [accountType, setAccountType] = useState<"private" | "sharing">("private");
+  // Default: kalau private habis tapi sharing ada, start dari sharing.
+  const [accountType, setAccountType] = useState<"private" | "sharing">(
+    hasSharing && stockPrivate === 0 && stockSharing > 0 ? "sharing" : "private"
+  );
+  // Stock count berdasarkan tipe yang dipilih (untuk "X tersedia" + qty max).
+  const availableStock = accountType === "sharing" ? stockSharing : stockPrivate;
+
+  // Clamp qty saat ganti tipe (kalau qty melebihi stok tipe baru).
+  useEffect(() => {
+    setQty((q) => Math.max(1, Math.min(q, availableStock || 1)));
+  }, [availableStock]);
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -166,7 +182,7 @@ export default function ProductDetailClient({ product }: Props) {
             >
               ● {product.cat || "Premium"}
             </span>
-            {product.stock <= 5 && (
+            {availableStock <= 5 && availableStock > 0 && (
               <span
                 style={{
                   padding: "4px 10px",
@@ -177,7 +193,7 @@ export default function ProductDetailClient({ product }: Props) {
                   fontWeight: 800,
                 }}
               >
-                Sisa {product.stock} stok!
+                Sisa {availableStock} stok!
               </span>
             )}
           </div>
@@ -468,14 +484,14 @@ export default function ProductDetailClient({ product }: Props) {
                 {qty}
               </div>
               <button
-                onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
-                disabled={qty >= product.stock}
+                onClick={() => setQty((q) => Math.min(availableStock, q + 1))}
+                disabled={qty >= availableStock}
                 style={{
                   width: 36,
                   height: 36,
                   border: 0,
                   background: "transparent",
-                  opacity: qty >= product.stock ? 0.4 : 1,
+                  opacity: qty >= availableStock ? 0.4 : 1,
                   fontSize: 18,
                   cursor: "pointer",
                   fontWeight: 700,
@@ -485,8 +501,8 @@ export default function ProductDetailClient({ product }: Props) {
                 +
               </button>
             </div>
-            <div style={{ fontSize: 11, color: product.stock <= 5 ? "var(--danger)" : "var(--ink-soft)" }}>
-              {product.stock} tersedia
+            <div style={{ fontSize: 11, color: availableStock <= 5 ? "var(--danger)" : "var(--ink-soft)" }}>
+              {availableStock} tersedia
             </div>
           </div>
 
@@ -545,26 +561,30 @@ export default function ProductDetailClient({ product }: Props) {
               <button
                 ref={btnRef}
                 onClick={onAdd}
+                disabled={availableStock === 0}
                 style={{
                   flex: 1,
                   padding: "16px",
                   borderRadius: 14,
-                  cursor: "pointer",
+                  cursor: availableStock === 0 ? "not-allowed" : "pointer",
                   border: "1.5px solid var(--ink)",
                   background: "var(--surface)",
                   color: "var(--ink)",
                   fontWeight: 700,
                   fontSize: 15,
                   fontFamily: "inherit",
+                  opacity: availableStock === 0 ? 0.4 : 1,
                 }}
               >
                 + Keranjang
               </button>
               <button
                 onClick={() => {
+                  if (availableStock === 0) return;
                   onAdd();
                   router.push("/cart");
                 }}
+                disabled={availableStock === 0}
                 style={{
                   flex: 1.4,
                   padding: "16px",
