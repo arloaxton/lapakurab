@@ -58,6 +58,7 @@ export interface ProductRow {
   tagline: string;
   price_idr: number;
   old_idr: number;
+  price_sharing_idr: number | null;
   stock: number;
   rating: number;
   reviews: number;

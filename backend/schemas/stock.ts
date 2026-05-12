@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const STOCK_STATUS = ["available", "reserved", "sold", "expired"] as const;
+const ACCOUNT_TYPE = ["private", "sharing"] as const;
 
 // Generic field schema — label resolved di UI berdasarkan product.credentialFormat
 const fieldStr = z.string().trim().max(2000);
@@ -12,11 +13,13 @@ export const createStockItemSchema = z.object({
   field2: fieldStr.optional().default(""),
   field3: fieldStr.optional().default(""),
   notes: fieldStr.optional().default(""),
+  accountType: z.enum(ACCOUNT_TYPE).optional().default("private"),
   status: z.enum(STOCK_STATUS).optional(),
 });
 
 export const bulkCreateStockSchema = z.object({
   productId: z.string().trim().min(1).max(40),
+  accountType: z.enum(ACCOUNT_TYPE).optional().default("private"),
   items: z
     .array(
       z.object({

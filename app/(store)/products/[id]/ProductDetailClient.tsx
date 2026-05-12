@@ -30,6 +30,9 @@ export default function ProductDetailClient({ product }: Props) {
   const [tab, setTab] = useState<"detail" | "reviews" | "how">("detail");
   const [countdown, setCountdown] = useState({ h: 5, m: 42, s: 18 });
   const [activeThumb, setActiveThumb] = useState(0);
+  // accountType: hanya bisa "sharing" kalau produk punya priceSharingIDR.
+  const hasSharing = Boolean(product.priceSharingIDR && product.priceSharingIDR > 0);
+  const [accountType, setAccountType] = useState<"private" | "sharing">("private");
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -53,12 +56,19 @@ export default function ProductDetailClient({ product }: Props) {
   }, []);
 
   const mult = DUR_MULTIPLIER[duration] || 1;
-  const finalPrice = Math.round(product.priceIDR * mult) * qty;
-  const oldPrice = Math.round(product.oldIDR * mult) * qty;
+  // Base price tergantung tipe akun yang dipilih
+  const basePrice =
+    accountType === "sharing" && hasSharing
+      ? (product.priceSharingIDR as number)
+      : product.priceIDR;
+  const finalPrice = Math.round(basePrice * mult) * qty;
+  // Harga coret: kalau sharing, hide (no strikethrough). Kalau private, gunakan oldIDR.
+  const oldPrice =
+    accountType === "sharing" ? 0 : Math.round(product.oldIDR * mult) * qty;
 
   const onAdd = () => {
     const r = btnRef.current?.getBoundingClientRect() ?? null;
-    for (let i = 0; i < qty; i++) addToCart(product, duration, r);
+    for (let i = 0; i < qty; i++) addToCart(product, duration, r, accountType);
   };
 
   return (
@@ -282,6 +292,71 @@ export default function ProductDetailClient({ product }: Props) {
           </div>
 
           {/* Duration picker */}
+          {hasSharing && (
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 14,
+                  marginBottom: 10,
+                  color: "var(--ink)",
+                }}
+              >
+                Tipe akun
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 8,
+                }}
+              >
+                {(["private", "sharing"] as const).map((t) => {
+                  const active = accountType === t;
+                  const isPrivate = t === "private";
+                  const tPrice = isPrivate
+                    ? product.priceIDR
+                    : (product.priceSharingIDR as number);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setAccountType(t)}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: active
+                          ? "2px solid var(--primary)"
+                          : "1.5px solid var(--border)",
+                        background: active ? "rgba(255,107,157,0.06)" : "var(--surface)",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        textAlign: "left",
+                        transition: "border 0.15s, background 0.15s",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: "var(--ink)",
+                          marginBottom: 2,
+                        }}
+                      >
+                        {isPrivate ? "Private" : "Sharing"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--ink-soft)", marginBottom: 4 }}>
+                        {isPrivate ? "Full akun, hanya kamu" : "1 profil dari akun shared"}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>
+                        {fmt(tPrice)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginBottom: 24 }}>
             <div
               style={{
@@ -321,7 +396,7 @@ export default function ProductDetailClient({ product }: Props) {
                       {d}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 2 }}>
-                      {fmt(Math.round(product.priceIDR * dm))}
+                      {fmt(Math.round(basePrice * dm))}
                     </div>
                     {dm >= 5 && (
                       <div

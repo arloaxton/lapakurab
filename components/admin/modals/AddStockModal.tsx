@@ -10,6 +10,8 @@ import { getCredentialFormat } from "@/lib/credential-format";
 
 export interface AddStockForm {
   productId: string;
+  /** Tipe akun: private (1 buyer = full akun) atau sharing (1 buyer = 1 profil). */
+  accountType: "private" | "sharing";
   /** Raw textarea content — parsed sesuai credential_format produk. */
   lines: string;
 }
@@ -72,6 +74,7 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
   const toast = useToast();
   const activeProducts = products.filter((p) => p.active);
   const [productId, setProductId] = useState(activeProducts[0]?.id || "");
+  const [accountType, setAccountType] = useState<"private" | "sharing">("private");
   const [lines, setLines] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -120,7 +123,7 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onSave({ productId, lines });
+      await onSave({ productId, accountType, lines });
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Gagal simpan");
     } finally {
@@ -181,6 +184,29 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
               {p.name} — {getCredentialFormat(p.credentialFormat).label}
             </option>
           ))}
+        </select>
+      </Field>
+
+      <Field
+        label="Tipe akun"
+        required
+        hint={
+          selectedProduct?.priceSharingIDR
+            ? "Produk ini punya varian Private & Sharing"
+            : "Produk ini cuma Private (set Harga sharing di produk untuk aktifkan)"
+        }
+      >
+        <select
+          value={accountType}
+          onChange={(e) => setAccountType(e.target.value as "private" | "sharing")}
+          style={adminInputStyle}
+          disabled={!selectedProduct?.priceSharingIDR && accountType === "private" ? false : !selectedProduct?.priceSharingIDR}
+        >
+          <option value="private">Private (full akun)</option>
+          <option value="sharing" disabled={!selectedProduct?.priceSharingIDR}>
+            Sharing (1 profil)
+            {!selectedProduct?.priceSharingIDR ? " — set harga sharing dulu di produk" : ""}
+          </option>
         </select>
       </Field>
 

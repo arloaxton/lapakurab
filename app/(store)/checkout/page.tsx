@@ -162,7 +162,11 @@ export default function CheckoutPage() {
             productName: line.product.name,
             duration: line.duration,
             qty: line.qty,
-            unitPriceIDR: line.product.priceIDR,
+            accountType: line.accountType,
+            unitPriceIDR:
+              line.accountType === "sharing" && line.product.priceSharingIDR
+                ? line.product.priceSharingIDR
+                : line.product.priceIDR,
           })),
         }),
       });
@@ -189,20 +193,25 @@ export default function CheckoutPage() {
           const methodMeta = PAYMENT_METHODS.find((p) => p.id === method);
           const paymentLabel = methodMeta?.name ?? method;
           await Promise.all(
-            cart.map((line) =>
-              createOrderClient({
+            cart.map((line) => {
+              const linePrice =
+                line.accountType === "sharing" && line.product.priceSharingIDR
+                  ? line.product.priceSharingIDR
+                  : line.product.priceIDR;
+              return createOrderClient({
                 productId: line.product.id,
                 productName: line.product.name,
                 duration: line.duration,
                 qty: line.qty,
-                totalIDR: line.product.priceIDR * line.qty,
+                totalIDR: linePrice * line.qty,
+                accountType: line.accountType,
                 customerName: user?.name ?? values.email.split("@")[0],
                 customerEmail: values.email,
                 customerPhone: values.phone || undefined,
                 paymentMethod: paymentLabel,
                 notes: appliedVoucher ? `voucher:${appliedVoucher.code}` : undefined,
-              })
-            )
+              });
+            })
           );
           if (appliedVoucher) {
             redeemVoucherCode(appliedVoucher.code).catch(() => {});

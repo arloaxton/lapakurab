@@ -19,9 +19,11 @@ import { isSupabaseConfigured } from "@/backend/env";
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface CartLine {
-  key: string; // productId|duration
+  key: string; // productId|duration|accountType
   product: Product;
   duration: string;
+  /** 'private' atau 'sharing'. Default 'private' kalau produk gak punya varian. */
+  accountType: "private" | "sharing";
   qty: number;
 }
 
@@ -41,7 +43,12 @@ export interface StoreApi {
   cart: CartLine[];
   cartTotal: number;
   cartCount: number;
-  addToCart: (product: Product, duration: string, originRect?: DOMRect | null) => void;
+  addToCart: (
+    product: Product,
+    duration: string,
+    originRect?: DOMRect | null,
+    accountType?: "private" | "sharing"
+  ) => void;
   removeFromCart: (key: string) => void;
   updateQty: (key: string, qty: number) => void;
   clearCart: () => void;
@@ -120,12 +127,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const c = localStorage.getItem(LS_CART);
       if (c) {
-        const parsed = JSON.parse(c) as { key: string; productId: string; duration: string; qty: number }[];
+        const parsed = JSON.parse(c) as {
+          key: string;
+          productId: string;
+          duration: string;
+          accountType?: "private" | "sharing";
+          qty: number;
+        }[];
         const lines: CartLine[] = parsed
           .map((p) => {
             const product = PRODUCTS.find((x) => x.id === p.productId);
             if (!product) return null;
-            return { key: p.key, product, duration: p.duration, qty: p.qty };
+            return {
+              key: p.key,
+              product,
+              duration: p.duration,
+              accountType: p.accountType ?? "private",
+              qty: p.qty,
+            };
           })
           .filter((x): x is CartLine => x != null);
         setCart(lines);
@@ -178,6 +197,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         key: l.key,
         productId: l.product.id,
         duration: l.duration,
+        accountType: l.accountType,
         qty: l.qty,
       }));
       localStorage.setItem(LS_CART, JSON.stringify(slim));
@@ -232,13 +252,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ─── Cart actions ─────────────────────────────────────────────────────────
   const addToCart = useCallback(
-    (product: Product, duration: string, originRect?: DOMRect | null) => {
-      const key = product.id + "|" + duration;
+    (
+      product: Product,
+      duration: string,
+      originRect?: DOMRect | null,
+      accountType: "private" | "sharing" = "private"
+    ) => {
+      const key = product.id + "|" + duration + "|" + accountType;
       setCart((c) => {
         const existing = c.find((it) => it.key === key);
         if (existing)
           return c.map((it) => (it.key === key ? { ...it, qty: it.qty + 1 } : it));
-        return [...c, { key, product, duration, qty: 1 }];
+        return [...c, { key, product, duration, accountType, qty: 1 }];
       });
       if (originRect) {
         setFlyAnim({
@@ -283,7 +308,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cartTotal = useMemo(
-    () => cart.reduce((s, it) => s + it.product.priceIDR * it.qty, 0),
+    () =>
+      cart.reduce((s, it) => {
+        const price =
+          it.accountType === "sharing" && it.product.priceSharingIDR
+            ? it.product.priceSharingIDR
+            : it.product.priceIDR;
+        return s + price * it.qty;
+      }, 0),
     [cart]
   );
   const cartCount = useMemo(

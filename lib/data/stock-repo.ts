@@ -24,6 +24,7 @@ export interface StockRow {
   field2: string | null;
   field3: string | null;
   notes: string | null;
+  account_type: "private" | "sharing";
   status: StockStatus;
   order_id: string | null;
   added_at: string;
@@ -38,6 +39,7 @@ function rowToStock(r: StockRow): StockItem {
     field2: r.field2 ?? "",
     field3: r.field3 ?? "",
     notes: r.notes ?? "",
+    accountType: r.account_type ?? "private",
     status: r.status,
     addedAt: r.added_at.slice(0, 10),
   };
@@ -50,6 +52,7 @@ export interface ClaimedCredential {
   field3: string | null;
   notes: string | null;
   credential_format: string;
+  account_type: "private" | "sharing";
 }
 
 // ─── List ───────────────────────────────────────────────────────────────
@@ -57,6 +60,7 @@ export interface ClaimedCredential {
 export interface ListStockOpts {
   productId?: string;
   status?: StockStatus;
+  accountType?: "private" | "sharing";
   limit?: number;
   offset?: number;
 }
@@ -66,6 +70,8 @@ export async function listStock(opts: ListStockOpts = {}): Promise<StockItem[]> 
     let list = SEED_STOCK.slice();
     if (opts.productId) list = list.filter((s) => s.productId === opts.productId);
     if (opts.status) list = list.filter((s) => s.status === opts.status);
+    if (opts.accountType)
+      list = list.filter((s) => s.accountType === opts.accountType);
     if (opts.offset) list = list.slice(opts.offset);
     if (opts.limit) list = list.slice(0, opts.limit);
     return list;
@@ -75,6 +81,7 @@ export async function listStock(opts: ListStockOpts = {}): Promise<StockItem[]> 
   let q = sb.from("stock_items").select("*").order("added_at", { ascending: false });
   if (opts.productId) q = q.eq("product_id", opts.productId);
   if (opts.status) q = q.eq("status", opts.status);
+  if (opts.accountType) q = q.eq("account_type", opts.accountType);
   if (opts.limit) q = q.range(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit - 1);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
@@ -97,6 +104,7 @@ export async function createStockItem(input: CreateStockItemInput): Promise<Stoc
     field2: input.field2 ?? "",
     field3: input.field3 ?? "",
     notes: input.notes ?? "",
+    account_type: input.accountType ?? "private",
     status: input.status ?? "available",
   };
   const { data, error } = await sb.from("stock_items").insert(insertRow).select().single();
@@ -120,6 +128,7 @@ export async function bulkCreateStock(input: BulkCreateStockInput): Promise<Stoc
     field2: it.field2 ?? "",
     field3: it.field3 ?? "",
     notes: it.notes ?? "",
+    account_type: input.accountType ?? "private",
     status: "available" as StockStatus,
   }));
   const { data, error } = await sb.from("stock_items").insert(rows).select();
@@ -170,7 +179,8 @@ export async function deleteStockItem(id: string): Promise<void> {
 
 export async function claimStockForOrder(
   orderId: string,
-  productId: string
+  productId: string,
+  accountType: "private" | "sharing" = "private"
 ): Promise<ClaimedCredential | null> {
   if (!isSupabaseConfigured()) return null;
   const { getServerClient } = await import("@/backend/db/server-client");
@@ -178,6 +188,7 @@ export async function claimStockForOrder(
   const { data, error } = await sb.rpc("claim_stock", {
     p_order_id: orderId,
     p_product_id: productId,
+    p_account_type: accountType,
   });
   if (error) throw new Error(error.message);
   if (!data || (Array.isArray(data) && data.length === 0)) return null;

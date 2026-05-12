@@ -125,6 +125,15 @@ export default function CartPage() {
                 </div>
                 <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 2 }}>
                   Durasi: {it.duration}
+                  {" · "}
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      color: it.accountType === "sharing" ? "#92400E" : "#1E40AF",
+                    }}
+                  >
+                    {it.accountType === "sharing" ? "Sharing" : "Private"}
+                  </span>
                 </div>
                 <div
                   style={{
@@ -135,7 +144,11 @@ export default function CartPage() {
                     marginTop: 6,
                   }}
                 >
-                  {fmt(it.product.priceIDR * it.qty)}
+                  {fmt(
+                    (it.accountType === "sharing" && it.product.priceSharingIDR
+                      ? it.product.priceSharingIDR
+                      : it.product.priceIDR) * it.qty
+                  )}
                 </div>
               </div>
               <div

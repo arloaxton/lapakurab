@@ -8,6 +8,7 @@ export const createOrderSchema = z.object({
   duration: z.string().trim().min(1).max(40),
   qty: z.number().int().positive().max(99),
   totalIDR: z.number().int().nonnegative(),
+  accountType: z.enum(["private", "sharing"]).optional().default("private"),
   customerName: z.string().trim().min(1).max(120),
   customerEmail: z.string().trim().toLowerCase().email("Email tidak valid"),
   customerPhone: z.string().trim().max(40).optional(),

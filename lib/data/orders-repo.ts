@@ -176,6 +176,7 @@ export async function createOrder(
     duration: input.duration,
     qty: input.qty,
     total_idr: input.totalIDR,
+    account_type: input.accountType ?? "private",
     status: "paid",
     payment_method: input.paymentMethod ?? null,
     notes: input.notes ?? null,
@@ -186,7 +187,7 @@ export async function createOrder(
   // Auto-deliver: coba claim 1 stock available. Kalau habis, order tetap 'paid'.
   try {
     const { claimStockForOrder } = await import("@/lib/data/stock-repo");
-    await claimStockForOrder(id, input.productId);
+    await claimStockForOrder(id, input.productId, input.accountType ?? "private");
     // Re-fetch order (status bisa berubah ke 'delivered' kalau stock ke-claim)
     const { data: refreshed } = await sb
       .from("orders")
@@ -249,6 +250,7 @@ export async function createPendingOrder(
     duration: input.duration,
     qty: input.qty,
     total_idr: input.totalIDR,
+    account_type: input.accountType ?? "private",
     status: "pending",
     payment_method: input.paymentMethod ?? null,
     notes: input.notes ?? null,
@@ -326,7 +328,11 @@ export async function settlePaymentRef(paymentRef: string): Promise<{
   for (const o of pending) {
     if (!o.product_id) continue;
     try {
-      const cred = await claimStockForOrder(o.id, o.product_id);
+      const cred = await claimStockForOrder(
+        o.id,
+        o.product_id,
+        (o as { account_type?: "private" | "sharing" }).account_type ?? "private"
+      );
       if (cred) {
         delivered += 1;
         // Best-effort email — TIDAK block webhook response.

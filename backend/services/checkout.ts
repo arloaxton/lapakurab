@@ -118,6 +118,7 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
         duration: it.duration,
         qty: it.qty,
         totalIDR: it.unitPriceIDR * it.qty,
+        accountType: it.accountType,
         customerName: input.customerName,
         customerEmail: input.customerEmail,
         customerPhone: input.customerPhone,

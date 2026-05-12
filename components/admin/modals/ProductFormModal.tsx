@@ -28,6 +28,7 @@ const DEFAULT_PRODUCT: Product = {
   tagline: "",
   priceIDR: 0,
   oldIDR: 0,
+  priceSharingIDR: null,
   stock: 0,
   rating: 5.0,
   reviews: 0,
@@ -83,6 +84,10 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
       oldIDR: (v, all) =>
         v && (v as number) > 0 && (v as number) <= (all.priceIDR as number)
           ? "Harga coret harus lebih besar dari harga jual"
+          : null,
+      priceSharingIDR: (v, all) =>
+        v && (v as number) > 0 && (v as number) >= (all.priceIDR as number)
+          ? "Harga sharing harus lebih kecil dari harga private"
           : null,
       stock: (v) => ((v as number) < 0 ? "Stok tidak boleh negatif" : null),
       hue: (v) => ((v as number) < 0 || (v as number) > 360 ? "Hue harus 0–360" : null),
@@ -309,6 +314,21 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
           />
         </Field>
       </div>
+      <Field
+        label="Harga sharing (IDR)"
+        hint="Opsional. Aktifkan varian sharing — harus < harga jual. Kosongkan/0 = produk hanya private."
+      >
+        <input
+          type="number"
+          min="0"
+          value={form.priceSharingIDR ?? 0}
+          onChange={(e) => {
+            const v = +e.target.value;
+            upd("priceSharingIDR", v > 0 ? v : null);
+          }}
+          style={adminInputStyle}
+        />
+      </Field>
       <Field
         label="Durasi tersedia (pisahkan koma)"
         error={touched.durations ? errors.durations : null}

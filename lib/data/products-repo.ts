@@ -29,6 +29,7 @@ function rowToProduct(r: ProductRow): Product {
     tagline: r.tagline,
     priceIDR: r.price_idr,
     oldIDR: r.old_idr,
+    priceSharingIDR: r.price_sharing_idr,
     stock: r.stock,
     rating: Number(r.rating),
     reviews: r.reviews,
@@ -143,6 +144,7 @@ export async function createProduct(input: Omit<Product, "id"> & { id?: string }
     tagline: input.tagline,
     price_idr: input.priceIDR,
     old_idr: input.oldIDR,
+    price_sharing_idr: input.priceSharingIDR ?? null,
     stock: input.stock,
     rating: input.rating,
     reviews: input.reviews,
@@ -170,6 +172,8 @@ export async function updateProduct(id: string, patch: Partial<Product>): Promis
   if (patch.tagline !== undefined) dbPatch.tagline = patch.tagline;
   if (patch.priceIDR !== undefined) dbPatch.price_idr = patch.priceIDR;
   if (patch.oldIDR !== undefined) dbPatch.old_idr = patch.oldIDR;
+  if (patch.priceSharingIDR !== undefined)
+    dbPatch.price_sharing_idr = patch.priceSharingIDR;
   if (patch.stock !== undefined) dbPatch.stock = patch.stock;
   if (patch.rating !== undefined) dbPatch.rating = patch.rating;
   if (patch.reviews !== undefined) dbPatch.reviews = patch.reviews;

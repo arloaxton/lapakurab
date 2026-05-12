@@ -14,6 +14,8 @@ const baseFields = {
   tagline: z.string().trim().min(2, "Tagline terlalu pendek").max(140, "Tagline terlalu panjang"),
   priceIDR: z.number().int().positive("Harga harus positif"),
   oldIDR: z.number().int().nonnegative("Harga lama tidak boleh negatif"),
+  /** Null/undefined = produk hanya dijual private. */
+  priceSharingIDR: z.number().int().positive().optional().nullable(),
   stock: z.number().int().nonnegative("Stok tidak boleh negatif"),
   rating: z.number().min(0).max(5).optional(),
   reviews: z.number().int().nonnegative().optional(),
@@ -47,6 +49,7 @@ export const updateProductSchema = z
     tagline: baseFields.tagline.optional(),
     priceIDR: baseFields.priceIDR.optional(),
     oldIDR: baseFields.oldIDR.optional(),
+    priceSharingIDR: baseFields.priceSharingIDR,
     stock: baseFields.stock.optional(),
     rating: baseFields.rating,
     reviews: baseFields.reviews,

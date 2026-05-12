@@ -7,6 +7,8 @@
 export type ProductCategory = string;
 export type CatFilter = "all" | string;
 
+export type AccountType = "private" | "sharing";
+
 export interface Product {
   id: string;
   name: string;
@@ -15,6 +17,9 @@ export interface Product {
   tagline: string;
   priceIDR: number;
   oldIDR: number;
+  /** Harga varian sharing. Null = produk tidak punya varian sharing
+   *  (cuma dijual private). Constraint DB: < priceIDR. */
+  priceSharingIDR?: number | null;
   stock: number;
   rating: number;
   reviews: number;
@@ -68,6 +73,8 @@ export interface CartItem {
   productId: string;
   duration: string;
   qty: number;
+  /** Default 'private' (saat produk gak punya varian sharing). */
+  accountType: AccountType;
 }
 
 export interface StoreUser {
@@ -120,6 +127,8 @@ export interface StockItem {
   field3?: string;
   /** Catatan free-text (mis. cara redeem, expiry, dll). */
   notes?: string;
+  /** Tipe akun: private (full access) atau sharing (1 profil). Default 'private'. */
+  accountType: AccountType;
   status: StockStatus;
   addedAt: string; // YYYY-MM-DD
 }

@@ -22,6 +22,7 @@ export const checkoutSchema = z.object({
         productName: z.string().trim().min(1).max(120),
         duration: z.string().trim().min(1).max(40),
         qty: z.number().int().positive().max(99),
+        accountType: z.enum(["private", "sharing"]).optional().default("private"),
         unitPriceIDR: z.number().int().nonnegative(),
       })
     )

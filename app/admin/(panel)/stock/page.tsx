@@ -65,6 +65,7 @@ export default function AdminStockPage() {
     if (useApi) {
       const saved = await bulkCreateStockClient({
         productId: form.productId,
+        accountType: form.accountType,
         items: parsed,
       });
       updateStock((list) => [...saved, ...list]);
@@ -77,6 +78,7 @@ export default function AdminStockPage() {
         field2: it.field2,
         field3: it.field3,
         notes: it.notes,
+        accountType: form.accountType,
         status: "available",
         addedAt: new Date().toISOString().slice(0, 10),
       }));
@@ -193,7 +195,7 @@ export default function AdminStockPage() {
       <BulkBar selection={stockSel} actions={stockBulkActions} />
 
       <TableShell
-        columns={["Produk", "Field 1", "Field 2", "Status", "Ditambahkan", ""]}
+        columns={["Produk", "Tipe", "Field 1", "Field 2", "Status", "Ditambahkan", ""]}
         ids={paged.items.map((s) => s.id)}
         selection={stockSel}
         rows={paged.items.map((s) => {
@@ -201,9 +203,23 @@ export default function AdminStockPage() {
           const fmt = prod ? getCredentialFormat(prod.credentialFormat) : null;
           const sensitive1 = fmt?.fields.field1?.sensitive ?? false;
           const sensitive2 = fmt?.fields.field2?.sensitive ?? true;
+          const isSharing = s.accountType === "sharing";
           return [
             <span key="p" style={{ fontWeight: 500, fontSize: 13, color: "var(--ink)" }}>
               {prod?.name || "—"}
+            </span>,
+            <span
+              key="t"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "3px 8px",
+                borderRadius: 6,
+                background: isSharing ? "#FEF3C7" : "#DBEAFE",
+                color: isSharing ? "#92400E" : "#1E40AF",
+              }}
+            >
+              {isSharing ? "Sharing" : "Private"}
             </span>,
             <CredentialReveal key="f1" value={s.field1} masked={sensitive1} />,
             s.field2 ? (
