@@ -70,122 +70,16 @@ function LoginInner() {
       }}
     >
       <div
-        className="lk-split-2"
         style={{
-          maxWidth: 980,
+          maxWidth: 440,
           width: "100%",
+          background: "var(--surface)",
+          borderRadius: 24,
+          padding: "36px 32px",
+          border: "1.5px solid var(--border)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Left: visual */}
-        <div className="lk-auth-visual" style={{ position: "relative", height: 440 }}>
-          <div
-            style={{
-              position: "absolute",
-              top: 20,
-              left: 20,
-              right: 60,
-              bottom: 60,
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              borderRadius: 32,
-              transform: "rotate(-3deg)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 60,
-              left: 60,
-              right: 20,
-              bottom: 20,
-              background: "linear-gradient(135deg, var(--lilac) 0%, #1A1538 100%)",
-              borderRadius: 32,
-              transform: "rotate(2deg)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              boxShadow: "0 30px 80px rgba(123,97,255,0.3)",
-            }}
-          >
-            <div style={{ textAlign: "center", padding: 24 }}>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 48,
-                  fontWeight: 800,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                }}
-              >
-                Welcome
-                <br />
-                back,
-                <br />
-                member.
-              </div>
-              <div style={{ marginTop: 16, fontSize: 14, opacity: 0.85 }}>
-                Akses akun favoritmu lebih cepat.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: form */}
-        <div
-          style={{
-            background: "var(--surface)",
-            borderRadius: 32,
-            padding: 32,
-            border: "1.5px solid var(--border)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.06)",
-          }}
-        >
-          {/* Tab switcher */}
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              marginBottom: 24,
-              padding: 4,
-              background: "var(--bg)",
-              borderRadius: 999,
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: 999,
-                background: "var(--ink)",
-                color: "white",
-                fontWeight: 700,
-                fontSize: 13,
-                fontFamily: "inherit",
-                textAlign: "center",
-              }}
-            >
-              Masuk
-            </div>
-            <Link
-              href={next === "/dashboard" ? "/register" : `/register?next=${encodeURIComponent(next)}`}
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: 999,
-                background: "transparent",
-                color: "var(--ink-soft)",
-                fontWeight: 700,
-                fontSize: 13,
-                fontFamily: "inherit",
-                textDecoration: "none",
-                textAlign: "center",
-              }}
-            >
-              Daftar
-            </Link>
-          </div>
-
           <h2
             style={{
               fontFamily: "var(--font-display)",
@@ -272,7 +166,30 @@ function LoginInner() {
               </Link>
             </div>
           </form>
-        </div>
+
+          {/* Switch ke /register */}
+          <div
+            style={{
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: "1px solid var(--border)",
+              textAlign: "center",
+              fontSize: 13,
+              color: "var(--ink-soft)",
+            }}
+          >
+            Belum punya akun?{" "}
+            <Link
+              href={next === "/dashboard" ? "/register" : `/register?next=${encodeURIComponent(next)}`}
+              style={{
+                color: "var(--primary)",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              Daftar di sini →
+            </Link>
+          </div>
       </div>
     </div>
   );
