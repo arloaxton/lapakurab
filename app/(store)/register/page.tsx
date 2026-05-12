@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useStore } from "@/components/store/StoreProvider";
 import { AuthFormField } from "@/components/store/AuthFormField";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { signUp } from "@/lib/data/auth-repo";
+import { signUp, verifyOtp } from "@/lib/data/auth-repo";
 import * as v from "@/lib/validators";
 
 export default function RegisterPage() {
@@ -41,9 +41,13 @@ function RegisterInner() {
       }
     );
 
-  const [step, setStep] = useState<"form" | "sent">("form");
+  const [step, setStep] = useState<"form" | "otp">("form");
   const [submitting, setSubmitting] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const [resendIn, setResendIn] = useState(0);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -71,11 +75,14 @@ function RegisterInner() {
       return;
     }
 
-    // Supabase email confirm flow → tampilkan "cek email" UI
+    // Supabase email confirm flow → tampilkan OTP input
     if (result.needsConfirmation) {
-      setStep("sent");
+      setStep("otp");
       setResendIn(60);
-      toast.success("Link konfirmasi terkirim", `Cek inbox di ${values.email}`);
+      setOtp(["", "", "", "", "", ""]);
+      setOtpError(null);
+      toast.success("Kode konfirmasi terkirim", `Cek inbox di ${values.email}`);
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
       return;
     }
 
@@ -98,11 +105,58 @@ function RegisterInner() {
     if (result.error && !result.error.includes("already")) {
       toast.error("Gagal kirim ulang", result.error);
     } else {
-      toast.success("Link terkirim ulang", `Cek inbox di ${values.email}`);
+      toast.success("Kode terkirim ulang", `Cek inbox di ${values.email}`);
     }
   };
 
-  if (step === "sent") {
+  const submitOtp = async (code: string) => {
+    if (verifying) return;
+    setVerifying(true);
+    setOtpError(null);
+    const result = await verifyOtp(values.email, code);
+    setVerifying(false);
+    if (result.error || !result.user) {
+      setOtpError(result.error || "Kode tidak valid");
+      setOtp(["", "", "", "", "", ""]);
+      setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      return;
+    }
+    setUser(result.user);
+    toast.success("Verifikasi berhasil", `Halo, ${result.user.name}!`);
+    router.push(next);
+  };
+
+  const updateOtp = (idx: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    setOtpError(null);
+    const next = [...otp];
+    next[idx] = val.slice(-1);
+    setOtp(next);
+    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
+    if (next.every((d) => d !== "")) {
+      setTimeout(() => submitOtp(next.join("")), 100);
+    }
+  };
+
+  const onOtpKey = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
+      otpRefs.current[idx - 1]?.focus();
+    }
+  };
+
+  const onOtpPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const txt = (e.clipboardData.getData("text") || "")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (txt.length === 6) {
+      e.preventDefault();
+      const next = txt.split("");
+      setOtp(next);
+      setTimeout(() => submitOtp(txt), 100);
+    }
+  };
+
+  if (step === "otp") {
     return (
       <div
         style={{
@@ -274,7 +328,7 @@ function RegisterInner() {
                 lineHeight: 1.5,
               }}
             >
-              Link konfirmasi sudah dikirim ke
+              Kode 6 digit sudah dikirim ke
             </p>
             <p
               style={{
@@ -305,28 +359,114 @@ function RegisterInner() {
               </button>
             </p>
 
+            {/* 6-digit OTP input */}
             <div
               style={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                padding: "16px 18px",
-                marginBottom: 20,
-                fontSize: 13,
-                lineHeight: 1.55,
-                color: "var(--ink)",
+                display: "flex",
+                gap: 8,
+                marginBottom: 14,
+                justifyContent: "center",
               }}
+              onPaste={onOtpPaste}
             >
-              Klik tautan konfirmasi di email tersebut untuk mengaktifkan akun.
-              Link berlaku <strong>1 jam</strong>. Setelah konfirmasi, kamu bisa{" "}
-              <Link
-                href="/login"
-                style={{ color: "var(--primary)", fontWeight: 600 }}
-              >
-                masuk di sini
-              </Link>
-              .
+              {otp.map((d, i) => (
+                <div key={i} style={{ display: "contents" }}>
+                  <input
+                    ref={(el) => {
+                      otpRefs.current[i] = el;
+                    }}
+                    value={d}
+                    onChange={(e) => updateOtp(i, e.target.value)}
+                    onKeyDown={(e) => onOtpKey(i, e)}
+                    inputMode="numeric"
+                    maxLength={1}
+                    disabled={verifying}
+                    className="lk-otp-input"
+                    style={{
+                      width: 48,
+                      height: 60,
+                      textAlign: "center",
+                      fontSize: 24,
+                      fontWeight: 600,
+                      fontFamily: "var(--font-display)",
+                      borderRadius: 10,
+                      border: `1.5px solid ${
+                        otpError ? "#DC2626" : d ? "var(--ink)" : "var(--border)"
+                      }`,
+                      background: otpError
+                        ? "rgba(220,38,38,0.04)"
+                        : d
+                          ? "var(--surface)"
+                          : "var(--surface-2)",
+                      color: "var(--ink)",
+                      outline: "none",
+                      transition: "all 0.15s",
+                      opacity: verifying ? 0.5 : 1,
+                    }}
+                  />
+                  {i === 2 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "var(--ink-soft)",
+                        fontSize: 18,
+                        fontWeight: 300,
+                      }}
+                    >
+                      —
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
+
+            {otpError ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  color: "#DC2626",
+                  marginBottom: 20,
+                  padding: "8px 12px",
+                  background: "rgba(220,38,38,0.08)",
+                  borderRadius: 8,
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {otpError}
+              </div>
+            ) : verifying ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  fontSize: 12,
+                  color: "var(--ink-soft)",
+                  marginBottom: 20,
+                  padding: "8px 12px",
+                }}
+              >
+                Memverifikasi…
+              </div>
+            ) : (
+              <div style={{ height: 20, marginBottom: 20 }} />
+            )}
 
             <div style={{ textAlign: "center", fontSize: 13, color: "var(--ink-soft)" }}>
               Email belum masuk? Cek folder spam, atau{" "}

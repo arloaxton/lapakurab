@@ -86,6 +86,39 @@ export async function signUp(input: SignUpInput): Promise<AuthResult> {
   }
 }
 
+// ─── verifyOtp ──────────────────────────────────────────────────────────
+
+export async function verifyOtp(
+  email: string,
+  token: string
+): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    // Mock mode — terima kode apapun kecuali "000000" untuk test invalid
+    if (token === "000000") {
+      return { user: null, error: "Kode tidak valid" };
+    }
+    return {
+      user: {
+        id: "u-self",
+        name: email.split("@")[0] || "Member",
+        email,
+      },
+    };
+  }
+  try {
+    const data = await postJSON<{ user: StoreUser }>(
+      "/api/auth/verify-otp",
+      { email, token }
+    );
+    return { user: data.user };
+  } catch (e) {
+    return {
+      user: null,
+      error: e instanceof Error ? e.message : "Verifikasi gagal",
+    };
+  }
+}
+
 // ─── signOut ────────────────────────────────────────────────────────────
 
 export async function signOut(): Promise<void> {

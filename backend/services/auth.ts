@@ -4,7 +4,12 @@
 
 import { getServerClient } from "../db/server-client";
 import { env } from "../env";
-import type { LoginInput, RegisterInput, ResetInput } from "../schemas/auth";
+import type {
+  LoginInput,
+  RegisterInput,
+  ResetInput,
+  VerifyOtpInput,
+} from "../schemas/auth";
 import type { StoreUser } from "@/lib/types";
 
 export interface AuthSession {
@@ -52,6 +57,29 @@ export async function register(
     return { user: sess.user, needsConfirmation: false };
   }
   return { user: null, needsConfirmation: true };
+}
+
+/**
+ * Verify OTP 6-digit yang dikirim Supabase via email signup confirmation.
+ * Setelah verified, user otomatis logged-in (Supabase issue session).
+ */
+export async function verifyOtp(input: VerifyOtpInput): Promise<AuthSession> {
+  const sb = await getServerClient();
+  const { data, error } = await sb.auth.verifyOtp({
+    email: input.email,
+    token: input.token,
+    type: "signup",
+  });
+  if (error) {
+    // Map common error
+    const msg = error.message.toLowerCase();
+    if (msg.includes("expired") || msg.includes("invalid")) {
+      throw new Error("Kode tidak valid atau sudah expired");
+    }
+    throw new Error(error.message);
+  }
+  if (!data.user) throw new Error("Verifikasi gagal — user tidak ditemukan");
+  return await readProfile(data.user.id);
 }
 
 export async function logout(): Promise<void> {

@@ -15,6 +15,15 @@ export const resetSchema = z.object({
   email: z.string().trim().toLowerCase().email("Format email tidak valid"),
 });
 
+export const verifyOtpSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Format email tidak valid"),
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Kode harus 6 digit angka"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ResetInput = z.infer<typeof resetSchema>;
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
