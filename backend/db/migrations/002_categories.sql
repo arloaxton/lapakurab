@@ -41,10 +41,19 @@ on conflict (id) do nothing;
 alter table public.products
   add column if not exists category_id text;
 
--- Backfill dari kolom cat lama (kalau masih ada datanya)
-update public.products
-set category_id = cat
-where category_id is null and cat is not null;
+-- Backfill dari kolom cat lama HANYA kalau kolom 'cat' masih ada
+-- (idempotent: aman kalau migration di-run berulang atau partial success).
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'products'
+      and column_name = 'cat'
+  ) then
+    execute 'update public.products set category_id = cat where category_id is null and cat is not null';
+  end if;
+end $$;
 
 -- Drop check constraint lama (kalau ada — nama default Postgres)
 do $$
