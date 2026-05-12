@@ -24,7 +24,7 @@ interface CheckoutResponse {
   orderIds: string[];
 }
 
-const ADMIN_FEE = 2500;
+const ADMIN_FEE = 0;
 
 interface CheckoutValues {
   email: string;
@@ -682,7 +682,6 @@ export default function CheckoutPage() {
             }}
           >
             <Row label="Subtotal" value={fmt(cartTotal)} />
-            <Row label="Biaya admin" value={fmt(ADMIN_FEE)} />
             {appliedVoucher && (
               <Row
                 label={`Voucher · ${appliedVoucher.code}`}

@@ -7,7 +7,7 @@ import { ProductTile } from "@/components/store/ProductTile";
 import { Row } from "@/components/store/Row";
 import { useToast } from "@/components/shared/ToastProvider";
 
-const ADMIN_FEE = 2500;
+const ADMIN_FEE = 0;
 
 export default function CartPage() {
   const {
@@ -355,7 +355,6 @@ export default function CartPage() {
             }}
           >
             <Row label="Subtotal" value={fmt(cartTotal)} />
-            <Row label="Biaya admin" value={fmt(ADMIN_FEE)} />
             <Row
               label="Diskon"
               value={"−" + fmt(voucherDiscount)}

@@ -96,9 +96,9 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     discount = computeDiscount(v, subtotal);
   }
 
-  // ─── 3. Admin fee dari settings ─────────────────────────────────────────
+  // ─── 3. Admin fee dari settings (default 0 = no fee) ────────────────────
   const settings = await getSettings();
-  const adminFee = settings.adminFeeIDR ?? 2500;
+  const adminFee = settings.adminFeeIDR ?? 0;
 
   // ─── 4. Total final yang di-charge ke customer via Tokopay ──────────────
   const totalAmount = Math.max(0, subtotal - discount + adminFee);
