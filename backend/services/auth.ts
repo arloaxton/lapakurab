@@ -104,8 +104,12 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
 /** Send password reset email. */
 export async function requestReset(input: ResetInput): Promise<void> {
   const sb = await getServerClient();
+  // Flow: email link → Supabase verify → /auth/callback?code=... &next=/reset-password
+  // → callback exchange code & set session cookie → redirect ke /reset-password.
   const { error } = await sb.auth.resetPasswordForEmail(input.email, {
-    redirectTo: env.SITE_URL ? `${env.SITE_URL}/login` : undefined,
+    redirectTo: env.SITE_URL
+      ? `${env.SITE_URL}/auth/callback?next=/reset-password`
+      : undefined,
   });
   if (error) throw new Error(error.message);
 }
