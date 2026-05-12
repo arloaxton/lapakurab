@@ -5,8 +5,9 @@ export function Footer() {
     <footer
       className="lk-footer-grid"
       style={{
-        marginTop: 64,
-        padding: "40px 0 24px",
+        maxWidth: 1200,
+        margin: "64px auto 0",
+        padding: "40px 24px 24px",
         borderTop: "1.5px solid var(--border)",
       }}
     >
