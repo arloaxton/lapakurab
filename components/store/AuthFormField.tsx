@@ -41,7 +41,7 @@ export function AuthFormField({
   const hasError = !!error;
 
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div style={{ marginBottom: 8 }}>
       <label
         style={{
           fontSize: 12,
@@ -106,36 +106,44 @@ export function AuthFormField({
           </button>
         )}
       </div>
-      {hasError ? (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            marginTop: 5,
-            fontSize: 11,
-            color: "#DC2626",
-          }}
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {error}
-        </div>
-      ) : hint ? (
-        <div style={{ marginTop: 5, fontSize: 11, color: "var(--ink-soft)" }}>{hint}</div>
-      ) : null}
+      {/* Reserved-space error/hint slot — fixed min-height supaya card tidak
+          ke-shift saat error muncul/hilang. aria-live untuk a11y. */}
+      <div
+        aria-live="polite"
+        style={{
+          minHeight: 18,
+          marginTop: 5,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          fontSize: 11,
+          color: hasError ? "#DC2626" : "var(--ink-soft)",
+          lineHeight: 1.3,
+        }}
+      >
+        {hasError ? (
+          <>
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{error}</span>
+          </>
+        ) : hint ? (
+          <span>{hint}</span>
+        ) : null}
+      </div>
     </div>
   );
 }
