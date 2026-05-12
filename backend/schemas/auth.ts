@@ -17,10 +17,12 @@ export const resetSchema = z.object({
 
 export const verifyOtpSchema = z.object({
   email: z.string().trim().toLowerCase().email("Format email tidak valid"),
+  // Supabase mailer_otp_length default 6, tapi project ini di-config 8.
+  // Allow range 6-10 supaya tahan kalau setting diubah lagi nanti.
   token: z
     .string()
     .trim()
-    .regex(/^\d{6}$/, "Kode harus 6 digit angka"),
+    .regex(/^\d{6,10}$/, "Kode harus 6-10 digit angka"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -43,7 +43,9 @@ function RegisterInner() {
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [submitting, setSubmitting] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  // OTP length = 8 (Supabase mailer_otp_length project ini = 8).
+  const OTP_LEN = 8;
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LEN).fill(""));
   const [otpError, setOtpError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [resendIn, setResendIn] = useState(0);
@@ -79,7 +81,7 @@ function RegisterInner() {
     if (result.needsConfirmation) {
       setStep("otp");
       setResendIn(60);
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(Array(OTP_LEN).fill(""));
       setOtpError(null);
       toast.success("Kode konfirmasi terkirim", `Cek inbox di ${values.email}`);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
@@ -117,7 +119,7 @@ function RegisterInner() {
     setVerifying(false);
     if (result.error || !result.user) {
       setOtpError(result.error || "Kode tidak valid");
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(Array(OTP_LEN).fill(""));
       setTimeout(() => otpRefs.current[0]?.focus(), 50);
       return;
     }
@@ -132,7 +134,7 @@ function RegisterInner() {
     const next = [...otp];
     next[idx] = val.slice(-1);
     setOtp(next);
-    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
+    if (val && idx < OTP_LEN - 1) otpRefs.current[idx + 1]?.focus();
     if (next.every((d) => d !== "")) {
       setTimeout(() => submitOtp(next.join("")), 100);
     }
@@ -147,8 +149,8 @@ function RegisterInner() {
   const onOtpPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const txt = (e.clipboardData.getData("text") || "")
       .replace(/\D/g, "")
-      .slice(0, 6);
-    if (txt.length === 6) {
+      .slice(0, OTP_LEN);
+    if (txt.length === OTP_LEN) {
       e.preventDefault();
       const next = txt.split("");
       setOtp(next);
@@ -363,9 +365,10 @@ function RegisterInner() {
             <div
               style={{
                 display: "flex",
-                gap: 8,
+                gap: 6,
                 marginBottom: 14,
                 justifyContent: "center",
+                flexWrap: "nowrap",
               }}
               onPaste={onOtpPaste}
             >
@@ -383,10 +386,10 @@ function RegisterInner() {
                     disabled={verifying}
                     className="lk-otp-input"
                     style={{
-                      width: 48,
-                      height: 60,
+                      width: 38,
+                      height: 52,
                       textAlign: "center",
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: 600,
                       fontFamily: "var(--font-display)",
                       borderRadius: 10,
@@ -404,7 +407,7 @@ function RegisterInner() {
                       opacity: verifying ? 0.5 : 1,
                     }}
                   />
-                  {i === 2 && (
+                  {i === 3 && (
                     <div
                       style={{
                         display: "flex",
