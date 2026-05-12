@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Modal } from "../Modal";
 import { Field } from "@/components/shared/Field";
 import { useToast } from "@/components/shared/ToastProvider";
 import { adminInputStyle, primaryBtn, secondaryBtn } from "../ui-styles";
 import type { Product } from "@/lib/types";
+import { getCredentialFormat } from "@/lib/credential-format";
 
 export interface AddStockForm {
   productId: string;
+  /** Raw textarea content — parsed sesuai credential_format produk. */
   lines: string;
 }
 
@@ -16,6 +18,54 @@ interface AddStockModalProps {
   products: Product[];
   onClose: () => void;
   onSave: (form: AddStockForm) => void | Promise<void>;
+}
+
+// Generate placeholder example untuk format tertentu
+function exampleFor(format: string): string {
+  switch (format) {
+    case "email_password":
+      return "user1@mail.id | Pass#123\nuser2@mail.id | Pass#456";
+    case "email_pin":
+      return "user1@mail.id | 1234\nuser2@mail.id | 5678";
+    case "key_only":
+      return "XXXX-XXXX-XXXX-XXXX\nYYYY-YYYY-YYYY-YYYY";
+    case "link_only":
+      return "https://redeem.example.com/abc123\nhttps://redeem.example.com/xyz789";
+    case "cookie":
+      return "session_id=abc123; auth_token=xyz789\nsession_id=def456; auth_token=uvw012";
+    case "custom":
+      return "field1 value | field2 value | field3 value | catatan";
+    default:
+      return "user@mail.id | password";
+  }
+}
+
+// Syntax hint per format (untuk Field hint text)
+function syntaxHintFor(format: string): string {
+  const fmt = getCredentialFormat(format);
+  const fields = fmt.fields;
+  const parts: string[] = [];
+  if (fields.field1) parts.push(fields.field1.label);
+  if (fields.field2) parts.push(fields.field2.label);
+  if (fields.field3) parts.push(fields.field3.label);
+  if (fields.notes) parts.push(fields.notes.label);
+  if (parts.length === 1) {
+    return `Satu ${parts[0]} per baris`;
+  }
+  return `Format: ${parts.join(" | ")} (satu akun per baris, pisah dengan |)`;
+}
+
+// Parse single line jadi {field1, field2, field3, notes}
+function parseLine(line: string): { field1: string; field2: string; field3: string; notes: string } | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split("|").map((p) => p.trim());
+  return {
+    field1: parts[0] ?? "",
+    field2: parts[1] ?? "",
+    field3: parts[2] ?? "",
+    notes: parts[3] ?? "",
+  };
 }
 
 export function AddStockModal({ products, onClose, onSave }: AddStockModalProps) {
@@ -27,21 +77,44 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const linesValid = lines
-    .split("\n")
-    .filter((l) => l.trim() && l.includes("|")).length;
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === productId),
+    [products, productId]
+  );
+  const format = selectedProduct?.credentialFormat || "email_password";
+  const formatDef = getCredentialFormat(format);
+
+  // Cek apakah format butuh field2 (kalau ya, line wajib mengandung "|")
+  const needsField2 = Boolean(formatDef.fields.field2?.required);
+
+  // Count valid lines
+  const validLines = useMemo(() => {
+    return lines
+      .split("\n")
+      .map(parseLine)
+      .filter((p): p is { field1: string; field2: string; field3: string; notes: string } => {
+        if (!p) return false;
+        if (!p.field1) return false;
+        if (needsField2 && !p.field2) return false;
+        return true;
+      });
+  }, [lines, needsField2]);
 
   const linesError =
     touched && !lines.trim()
       ? "Minimal satu baris akun"
-      : touched && linesValid === 0
-        ? "Format harus: email | password (satu per baris)"
+      : touched && validLines.length === 0
+        ? `Tidak ada baris valid. ${syntaxHintFor(format)}`
         : null;
 
   const submit = async () => {
     setTouched(true);
-    if (!productId || !lines.trim() || linesValid === 0) {
-      toast.error("Periksa kembali isian.");
+    if (!productId) {
+      toast.error("Pilih produk dulu");
+      return;
+    }
+    if (validLines.length === 0) {
+      toast.error("Tidak ada baris valid");
       return;
     }
     setSubmitting(true);
@@ -59,7 +132,7 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
     <Modal
       onClose={onClose}
       title="Tambah stok akun"
-      subtitle="Bulk import kredensial — satu akun per baris."
+      subtitle="Bulk import kredensial — satu item per baris."
       footer={
         <>
           <button type="button" onClick={onClose} disabled={submitting} style={secondaryBtn}>
@@ -71,7 +144,9 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
             disabled={submitting}
             style={{ ...primaryBtn, opacity: submitting ? 0.7 : 1, cursor: submitting ? "wait" : "pointer" }}
           >
-            {submitting ? "Menyimpan…" : `Simpan ${linesValid > 0 ? `(${linesValid} akun)` : ""}`}
+            {submitting
+              ? "Menyimpan…"
+              : `Simpan ${validLines.length > 0 ? `(${validLines.length} item)` : ""}`}
           </button>
         </>
       }
@@ -96,17 +171,37 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
           onChange={(e) => setProductId(e.target.value)}
           style={adminInputStyle}
         >
+          {activeProducts.length === 0 && (
+            <option value="" disabled>
+              Belum ada produk aktif
+            </option>
+          )}
           {activeProducts.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name}
+              {p.name} — {getCredentialFormat(p.credentialFormat).label}
             </option>
           ))}
         </select>
       </Field>
+
+      <div
+        style={{
+          padding: "10px 14px",
+          borderRadius: 10,
+          background: "var(--surface-2)",
+          fontSize: 12,
+          color: "var(--ink-soft)",
+          marginBottom: 14,
+        }}
+      >
+        <strong style={{ color: "var(--ink)" }}>Format: {formatDef.label}</strong>
+        <div style={{ marginTop: 4 }}>{formatDef.hint}</div>
+      </div>
+
       <Field
-        label="Daftar akun"
+        label="Daftar item"
         required
-        hint="Format: email | password — satu akun per baris"
+        hint={syntaxHintFor(format)}
         error={linesError}
       >
         <textarea
@@ -114,7 +209,7 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
           onChange={(e) => setLines(e.target.value)}
           onBlur={() => setTouched(true)}
           rows={8}
-          placeholder={"user1@mail.id | Pass#123\nuser2@mail.id | Pass#456"}
+          placeholder={exampleFor(format)}
           style={{
             ...adminInputStyle,
             fontFamily: "var(--font-mono), ui-monospace, monospace",
@@ -127,14 +222,14 @@ export function AddStockModal({ products, onClose, onSave }: AddStockModalProps)
         <div
           style={{
             fontSize: 11,
-            color: linesValid > 0 ? "var(--success)" : "var(--ink-soft)",
+            color: validLines.length > 0 ? "var(--success)" : "var(--ink-soft)",
             display: "flex",
             alignItems: "center",
             gap: 6,
           }}
         >
-          {linesValid > 0 ? "✓" : "·"}{" "}
-          <span>{linesValid} baris akun valid terdeteksi</span>
+          {validLines.length > 0 ? "✓" : "·"}{" "}
+          <span>{validLines.length} item valid terdeteksi</span>
         </div>
       )}
     </Modal>

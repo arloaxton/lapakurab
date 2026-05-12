@@ -230,7 +230,7 @@ export default function AdminProductDetailPage({
                 color: "var(--ink)",
               }}
             >
-              {s.email}
+              {s.field1}
             </code>,
             <code
               key="p"
@@ -240,7 +240,7 @@ export default function AdminProductDetailPage({
                 color: "var(--ink-soft)",
               }}
             >
-              {s.password}
+              {s.field2 || "—"}
             </code>,
             <StatusPill key="s" status={s.status} />,
             <span key="a" style={{ fontSize: 12, color: "var(--ink-soft)" }}>

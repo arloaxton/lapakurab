@@ -23,6 +23,9 @@ export interface Product {
   emoji: string;
   active?: boolean;
   imageUrl?: string;
+  /** Template kredensial yang dipakai saat tambah stok + kirim email customer.
+   *  Default 'email_password' untuk produk yang ada sebelum field ini ada. */
+  credentialFormat?: string; // CredentialFormat — loose untuk fwd-compat
 }
 
 export interface Category {
@@ -96,11 +99,27 @@ export interface AdminOrder {
 
 export type StockStatus = "available" | "sold" | "reserved" | "expired";
 
+// Format kredensial — admin pilih saat bikin produk. Menentukan label
+// field di admin stock form + di email yang dikirim ke customer.
+export type CredentialFormat =
+  | "email_password" // Streaming (Netflix, Spotify, Disney+)
+  | "email_pin"      // Game (Mobile Legends, dll)
+  | "key_only"       // License key / serial (Windows, Office)
+  | "link_only"      // URL redeem / activation link
+  | "cookie"         // Cookie JSON (Netflix cookie share)
+  | "custom";        // 2-3 field bebas + notes
+
 export interface StockItem {
   id: string;
   productId: string;
-  email: string;
-  password: string;
+  /** Field 1 (mis. email, key, atau url tergantung format). Wajib. */
+  field1: string;
+  /** Field 2 (mis. password, PIN). Opsional untuk format key_only/link_only. */
+  field2?: string;
+  /** Field 3 (extra slot untuk custom format). */
+  field3?: string;
+  /** Catatan free-text (mis. cara redeem, expiry, dll). */
+  notes?: string;
   status: StockStatus;
   addedAt: string; // YYYY-MM-DD
 }

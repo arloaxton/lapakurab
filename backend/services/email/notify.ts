@@ -14,8 +14,13 @@ export interface SendCredentialInput {
   customerEmail: string;
   productName: string;
   duration: string;
-  credEmail: string;
-  credPassword: string;
+  /** Credential format dari product — menentukan label field. */
+  credentialFormat?: string;
+  /** Generic credential fields. */
+  field1: string;
+  field2?: string;
+  field3?: string;
+  notes?: string;
 }
 
 export async function sendCredentialEmailFor(input: SendCredentialInput) {
@@ -33,8 +38,11 @@ export async function sendCredentialEmailFor(input: SendCredentialInput) {
     productName: input.productName,
     duration: input.duration,
     orderId: input.orderId,
-    email: input.credEmail,
-    password: input.credPassword,
+    credentialFormat: input.credentialFormat || "email_password",
+    field1: input.field1,
+    field2: input.field2,
+    field3: input.field3,
+    notes: input.notes,
     storeName,
     storeUrl: env.SITE_URL || "",
     csWA: csWA || undefined,

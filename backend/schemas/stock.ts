@@ -2,10 +2,16 @@ import { z } from "zod";
 
 const STOCK_STATUS = ["available", "reserved", "sold", "expired"] as const;
 
+// Generic field schema — label resolved di UI berdasarkan product.credentialFormat
+const fieldStr = z.string().trim().max(2000);
+const fieldRequired = z.string().trim().min(1, "Wajib diisi").max(2000);
+
 export const createStockItemSchema = z.object({
   productId: z.string().trim().min(1).max(40),
-  email: z.string().trim().min(3).max(200),
-  password: z.string().trim().min(1).max(200),
+  field1: fieldRequired,
+  field2: fieldStr.optional().default(""),
+  field3: fieldStr.optional().default(""),
+  notes: fieldStr.optional().default(""),
   status: z.enum(STOCK_STATUS).optional(),
 });
 
@@ -14,8 +20,10 @@ export const bulkCreateStockSchema = z.object({
   items: z
     .array(
       z.object({
-        email: z.string().trim().min(3).max(200),
-        password: z.string().trim().min(1).max(200),
+        field1: fieldRequired,
+        field2: fieldStr.optional().default(""),
+        field3: fieldStr.optional().default(""),
+        notes: fieldStr.optional().default(""),
       })
     )
     .min(1, "Minimal satu item")
@@ -25,8 +33,10 @@ export const bulkCreateStockSchema = z.object({
 export const updateStockItemSchema = z
   .object({
     status: z.enum(STOCK_STATUS).optional(),
-    email: z.string().trim().min(3).max(200).optional(),
-    password: z.string().trim().min(1).max(200).optional(),
+    field1: fieldRequired.optional(),
+    field2: fieldStr.optional(),
+    field3: fieldStr.optional(),
+    notes: fieldStr.optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "Tidak ada field yang di-update" });
 

@@ -22,6 +22,9 @@ const baseFields = {
   emoji: z.string().trim().max(8).optional(),
   active: z.boolean().optional(),
   imageUrl: z.string().trim().max(500).optional().nullable(),
+  credentialFormat: z
+    .enum(["email_password", "email_pin", "key_only", "link_only", "cookie", "custom"])
+    .optional(),
 };
 
 export const createProductSchema = z.object({
@@ -44,6 +47,7 @@ export const updateProductSchema = z
     emoji: baseFields.emoji,
     active: baseFields.active,
     imageUrl: baseFields.imageUrl,
+    credentialFormat: baseFields.credentialFormat,
   })
   .refine((v) => Object.keys(v).length > 0, { message: "Tidak ada field yang di-update" });
 

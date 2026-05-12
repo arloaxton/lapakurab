@@ -1,6 +1,9 @@
 /**
  * Stock repository — server-side query layer untuk pool kredensial.
  *
+ * Schema generic: field1/field2/field3/notes. Label resolved di UI berdasarkan
+ * product.credentialFormat (email_password, email_pin, key_only, dll).
+ *
  * Mock fallback aktif kalau Supabase belum di-konfig.
  */
 
@@ -17,8 +20,10 @@ import type {
 export interface StockRow {
   id: string;
   product_id: string;
-  email: string;
-  password: string;
+  field1: string;
+  field2: string | null;
+  field3: string | null;
+  notes: string | null;
   status: StockStatus;
   order_id: string | null;
   added_at: string;
@@ -29,8 +34,10 @@ function rowToStock(r: StockRow): StockItem {
   return {
     id: r.id,
     productId: r.product_id,
-    email: r.email,
-    password: r.password,
+    field1: r.field1,
+    field2: r.field2 ?? "",
+    field3: r.field3 ?? "",
+    notes: r.notes ?? "",
     status: r.status,
     addedAt: r.added_at.slice(0, 10),
   };
@@ -38,8 +45,11 @@ function rowToStock(r: StockRow): StockItem {
 
 export interface ClaimedCredential {
   id: string;
-  email: string;
-  password: string;
+  field1: string;
+  field2: string | null;
+  field3: string | null;
+  notes: string | null;
+  credential_format: string;
 }
 
 // ─── List ───────────────────────────────────────────────────────────────
@@ -83,8 +93,10 @@ export async function createStockItem(input: CreateStockItemInput): Promise<Stoc
   const insertRow: Record<string, unknown> = {
     id,
     product_id: input.productId,
-    email: input.email,
-    password: input.password,
+    field1: input.field1,
+    field2: input.field2 ?? "",
+    field3: input.field3 ?? "",
+    notes: input.notes ?? "",
     status: input.status ?? "available",
   };
   const { data, error } = await sb.from("stock_items").insert(insertRow).select().single();
@@ -104,8 +116,10 @@ export async function bulkCreateStock(input: BulkCreateStockInput): Promise<Stoc
   const rows = input.items.map((it, i) => ({
     id: "s" + baseTs + i + Math.random().toString(36).slice(2, 4),
     product_id: input.productId,
-    email: it.email,
-    password: it.password,
+    field1: it.field1,
+    field2: it.field2 ?? "",
+    field3: it.field3 ?? "",
+    notes: it.notes ?? "",
     status: "available" as StockStatus,
   }));
   const { data, error } = await sb.from("stock_items").insert(rows).select();
@@ -126,8 +140,10 @@ export async function updateStockItem(
   const sb = await getServerClient();
   const dbPatch: Record<string, unknown> = {};
   if (patch.status !== undefined) dbPatch.status = patch.status;
-  if (patch.email !== undefined) dbPatch.email = patch.email;
-  if (patch.password !== undefined) dbPatch.password = patch.password;
+  if (patch.field1 !== undefined) dbPatch.field1 = patch.field1;
+  if (patch.field2 !== undefined) dbPatch.field2 = patch.field2;
+  if (patch.field3 !== undefined) dbPatch.field3 = patch.field3;
+  if (patch.notes !== undefined) dbPatch.notes = patch.notes;
   const { data, error } = await sb
     .from("stock_items")
     .update(dbPatch)
@@ -171,22 +187,38 @@ export async function claimStockForOrder(
 
 // ─── Read credentials linked to user's own orders (RLS-protected) ───────
 
-export async function listMyCredentials(): Promise<
-  Array<{ orderId: string; email: string; password: string }>
-> {
+export interface MyCredentialRow {
+  orderId: string;
+  productId: string | null;
+  field1: string;
+  field2: string;
+  field3: string;
+  notes: string;
+}
+
+export async function listMyCredentials(): Promise<MyCredentialRow[]> {
   if (!isSupabaseConfigured()) return [];
   const { getServerClient } = await import("@/backend/db/server-client");
   const sb = await getServerClient();
-  // RLS: user only sees stock_items where order belongs to them
   const { data, error } = await sb
     .from("stock_items")
-    .select("email, password, order_id")
+    .select("field1, field2, field3, notes, order_id, product_id")
     .not("order_id", "is", null);
   if (error) throw new Error(error.message);
-  type Row = { email: string; password: string; order_id: string };
+  type Row = {
+    field1: string;
+    field2: string | null;
+    field3: string | null;
+    notes: string | null;
+    order_id: string;
+    product_id: string | null;
+  };
   return ((data as Row[] | null) ?? []).map((r) => ({
     orderId: r.order_id,
-    email: r.email,
-    password: r.password,
+    productId: r.product_id,
+    field1: r.field1,
+    field2: r.field2 ?? "",
+    field3: r.field3 ?? "",
+    notes: r.notes ?? "",
   }));
 }

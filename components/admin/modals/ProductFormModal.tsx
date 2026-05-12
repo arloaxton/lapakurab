@@ -12,6 +12,7 @@ import type { Category, Product } from "@/lib/types";
 import { isSupabaseConfigured } from "@/backend/env";
 import { fetchCategories } from "@/lib/data/categories-client";
 import { CATEGORIES as MOCK_CATEGORIES } from "@/lib/mock/categories";
+import { CREDENTIAL_FORMATS } from "@/lib/credential-format";
 
 interface ProductFormModalProps {
   product: Product | null;
@@ -23,6 +24,7 @@ const DEFAULT_PRODUCT: Product = {
   id: "",
   name: "",
   cat: "", // di-isi via dropdown setelah categories di-fetch
+  credentialFormat: "email_password",
   tagline: "",
   priceIDR: 0,
   oldIDR: 0,
@@ -253,6 +255,23 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
           />
         </Field>
       </div>
+      <Field label="Format kredensial">
+        <select
+          value={form.credentialFormat || "email_password"}
+          onChange={(e) => upd("credentialFormat", e.target.value)}
+          style={adminInputStyle}
+        >
+          {CREDENTIAL_FORMATS.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.label} — {f.hint}
+            </option>
+          ))}
+        </select>
+        <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 4, lineHeight: 1.4 }}>
+          Pilih template yang sesuai. Form admin tambah stok + email yang
+          dikirim ke customer akan adaptif berdasarkan format ini.
+        </div>
+      </Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field
           label="Harga jual (IDR)"

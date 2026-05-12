@@ -37,6 +37,7 @@ function rowToProduct(r: ProductRow): Product {
     emoji: r.emoji ?? "✦",
     active: r.active,
     imageUrl: r.image_url ?? undefined,
+    credentialFormat: r.credential_format ?? "email_password",
   };
 }
 
@@ -150,6 +151,7 @@ export async function createProduct(input: Omit<Product, "id"> & { id?: string }
     emoji: input.emoji,
     active: input.active ?? true,
     image_url: input.imageUrl ?? null,
+    credential_format: input.credentialFormat ?? "email_password",
   };
   const { data, error } = await sb.from("products").insert(insertRow).select().single();
   if (error) throw new Error(error.message);
@@ -176,6 +178,7 @@ export async function updateProduct(id: string, patch: Partial<Product>): Promis
   if (patch.emoji !== undefined) dbPatch.emoji = patch.emoji;
   if (patch.active !== undefined) dbPatch.active = patch.active;
   if (patch.imageUrl !== undefined) dbPatch.image_url = patch.imageUrl;
+  if (patch.credentialFormat !== undefined) dbPatch.credential_format = patch.credentialFormat;
 
   const { data, error } = await sb.from("products").update(dbPatch).eq("id", id).select().single();
   if (error) throw new Error(error.message);

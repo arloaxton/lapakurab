@@ -10,6 +10,7 @@ import {
   listStock as repoList,
   updateStockItem as repoUpdate,
   type ListStockOpts,
+  type MyCredentialRow,
 } from "@/lib/data/stock-repo";
 import type { StockItem } from "@/lib/types";
 import type {
@@ -50,9 +51,7 @@ export async function deleteStockService(id: string): Promise<void> {
 }
 
 /** User-facing: return credentials yang sudah di-deliver ke user current. */
-export async function listMyCredentialsService(): Promise<
-  Array<{ orderId: string; email: string; password: string }>
-> {
+export async function listMyCredentialsService(): Promise<MyCredentialRow[]> {
   const sess = await getCurrentSession();
   if (!sess) throw new Error("Unauthorized");
   return repoMyCreds();

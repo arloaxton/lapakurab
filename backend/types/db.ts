@@ -66,6 +66,7 @@ export interface ProductRow {
   emoji: string | null;
   active: boolean;
   image_url: string | null;
+  credential_format: string;
   created_at: string;
   updated_at: string;
 }

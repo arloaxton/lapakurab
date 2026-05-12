@@ -176,10 +176,12 @@ function DashboardInner() {
 
   const credByOrder = new Map<string, MyCredential>();
   for (const c of credentials) credByOrder.set(c.orderId, c);
+  /** Backward-compat helper — return field1 sebagai "email" + field2 sebagai
+   *  "password" untuk UI lama. Yang baru tampilkan semua field via creds.field1/field2. */
   const credFor = (orderId: string): { email: string; password: string } => {
     const real = credByOrder.get(orderId);
-    if (real) return { email: real.email, password: real.password };
-    // Mock fallback / not yet delivered: deterministic placeholder.
+    if (real) return { email: real.field1, password: real.field2 || "—" };
+    // Not yet delivered: placeholder.
     return {
       email: `user•${orderId.slice(-3)}@stream.mail`,
       password: `pw•${orderId.slice(-3)}#X9k`,

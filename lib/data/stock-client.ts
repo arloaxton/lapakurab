@@ -90,8 +90,11 @@ export async function deleteStockClient(id: string): Promise<void> {
 
 export interface MyCredential {
   orderId: string;
-  email: string;
-  password: string;
+  productId: string | null;
+  field1: string;
+  field2: string;
+  field3: string;
+  notes: string;
 }
 
 export async function fetchMyCredentials(): Promise<MyCredential[]> {

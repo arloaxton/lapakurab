@@ -336,8 +336,11 @@ export async function settlePaymentRef(paymentRef: string): Promise<{
           customerEmail: o.customer_email,
           productName: o.product_name,
           duration: o.duration,
-          credEmail: cred.email,
-          credPassword: cred.password,
+          credentialFormat: cred.credential_format,
+          field1: cred.field1,
+          field2: cred.field2 ?? undefined,
+          field3: cred.field3 ?? undefined,
+          notes: cred.notes ?? undefined,
         }).catch(() => {});
       }
     } catch {

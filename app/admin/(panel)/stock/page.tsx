@@ -17,6 +17,7 @@ import { useSelection } from "@/hooks/useSelection";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { usePagination } from "@/hooks/usePagination";
 import { fmtDate } from "@/lib/format";
+import { getCredentialFormat } from "@/lib/credential-format";
 import type { StockItem } from "@/lib/types";
 import { isSupabaseConfigured } from "@/backend/env";
 import {
@@ -37,18 +38,26 @@ export default function AdminStockPage() {
   const useApi = isSupabaseConfigured();
 
   const addStock = async (form: AddStockForm) => {
+    // Parse each line as: field1 | field2 | field3 | notes (semua opsional kecuali field1).
+    // Modal sudah validate sebelum onSave dipanggil — tapi kita parse ulang
+    // di sini untuk dapat data structured siap kirim ke API.
     const parsed = form.lines
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean)
       .map((l) => {
-        const [email, password] = l.split("|").map((s) => s.trim());
-        return { email, password };
+        const parts = l.split("|").map((s) => s.trim());
+        return {
+          field1: parts[0] ?? "",
+          field2: parts[1] ?? "",
+          field3: parts[2] ?? "",
+          notes: parts[3] ?? "",
+        };
       })
-      .filter((it) => it.email && it.password);
+      .filter((it) => it.field1);
 
     if (parsed.length === 0) {
-      toast.error("Format salah", "Gunakan format `email|password` per baris.");
+      toast.error("Format salah", "Minimal harus ada satu baris valid.");
       return;
     }
 
@@ -64,8 +73,10 @@ export default function AdminStockPage() {
       const newItems: StockItem[] = parsed.map((it, i) => ({
         id: "s" + Date.now() + i,
         productId: form.productId,
-        email: it.email,
-        password: it.password,
+        field1: it.field1,
+        field2: it.field2,
+        field3: it.field3,
+        notes: it.notes,
         status: "available",
         addedAt: new Date().toISOString().slice(0, 10),
       }));
@@ -80,7 +91,7 @@ export default function AdminStockPage() {
     const ok = await confirm({
       title: "Hapus stok akun?",
       description: target
-        ? `Kredensial ${target.email} akan dihapus permanen. Pastikan akun ini belum di-claim oleh order.`
+        ? `Kredensial "${target.field1}" akan dihapus permanen. Pastikan akun ini belum di-claim oleh order.`
         : "Stok akun akan dihapus permanen.",
       confirmLabel: "Ya, hapus",
       cancelLabel: "Batal",
@@ -182,17 +193,24 @@ export default function AdminStockPage() {
       <BulkBar selection={stockSel} actions={stockBulkActions} />
 
       <TableShell
-        columns={["Produk", "Email", "Password", "Status", "Ditambahkan", ""]}
+        columns={["Produk", "Field 1", "Field 2", "Status", "Ditambahkan", ""]}
         ids={paged.items.map((s) => s.id)}
         selection={stockSel}
         rows={paged.items.map((s) => {
           const prod = products.find((p) => p.id === s.productId);
+          const fmt = prod ? getCredentialFormat(prod.credentialFormat) : null;
+          const sensitive1 = fmt?.fields.field1?.sensitive ?? false;
+          const sensitive2 = fmt?.fields.field2?.sensitive ?? true;
           return [
             <span key="p" style={{ fontWeight: 500, fontSize: 13, color: "var(--ink)" }}>
               {prod?.name || "—"}
             </span>,
-            <CredentialReveal key="e" value={s.email} masked={false} />,
-            <CredentialReveal key="pw" value={s.password} masked />,
+            <CredentialReveal key="f1" value={s.field1} masked={sensitive1} />,
+            s.field2 ? (
+              <CredentialReveal key="f2" value={s.field2} masked={sensitive2} />
+            ) : (
+              <span key="f2" style={{ color: "var(--ink-soft)", fontSize: 12 }}>—</span>
+            ),
             <StatusPill key="s" status={s.status} />,
             <span key="a" style={{ fontSize: 12, color: "var(--ink-soft)" }}>
               {fmtDate(s.addedAt)}
@@ -204,7 +222,7 @@ export default function AdminStockPage() {
         })}
         empty="Belum ada stok kredensial"
         emptyIcon="🔐"
-        emptyDesc="Tambahkan email + password akun yang siap dikirim ke pelanggan saat checkout."
+        emptyDesc="Tambahkan kredensial akun yang siap dikirim ke pelanggan saat checkout."
         emptyCta={
           <button onClick={() => setAdding(true)} style={primaryBtn}>
             + Tambah stok
