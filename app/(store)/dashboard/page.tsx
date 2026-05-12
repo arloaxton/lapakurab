@@ -813,7 +813,7 @@ function DashboardInner() {
                             }}
                           >
                             <div style={{ fontWeight: 600, fontSize: 15, color: "var(--ink)" }}>
-                              {prod.name}
+                              {o.product}
                             </div>
                             <span
                               style={{
