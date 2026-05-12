@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ProductCard } from "@/components/store/ProductCard";
-import { Footer } from "@/components/store/Footer";
 import { Pagination } from "@/components/shared/Pagination";
 import { usePagination } from "@/hooks/usePagination";
 import { fmtIDR } from "@/lib/format";
@@ -271,7 +270,6 @@ function CatalogInner({ initialProducts, categories }: Props) {
           <Pagination api={paged} />
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

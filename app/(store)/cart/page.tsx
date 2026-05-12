@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStore } from "@/components/store/StoreProvider";
 import { ProductTile } from "@/components/store/ProductTile";
-import { Footer } from "@/components/store/Footer";
 import { Row } from "@/components/store/Row";
 import { useToast } from "@/components/shared/ToastProvider";
 
@@ -398,7 +397,6 @@ export default function CartPage() {
           </div>
         </aside>
       </div>
-      <Footer />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ProductTile } from "@/components/store/ProductTile";
 import { ProductCard } from "@/components/store/ProductCard";
-import { Footer } from "@/components/store/Footer";
 import { useStore } from "@/components/store/StoreProvider";
 import type { Category, Product } from "@/lib/types";
 
@@ -394,7 +393,6 @@ export default function HomeClient({ products, categories }: Props) {
         ))}
       </div>
 
-      <Footer />
     </div>
   );
 }

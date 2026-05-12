@@ -5,8 +5,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useStore } from "@/components/store/StoreProvider";
 import { ProductTile } from "@/components/store/ProductTile";
-import { Footer } from "@/components/store/Footer";
 import { AuthFormField } from "@/components/store/AuthFormField";
+import { ChangePasswordModal } from "@/components/store/ChangePasswordModal";
 import { useToast } from "@/components/shared/ToastProvider";
 import { Pagination } from "@/components/shared/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -73,11 +73,13 @@ function DashboardInner() {
     toast.success("Profil tersimpan", "Perubahan info kontak berhasil diterapkan.");
   };
 
+  const [pwModalOpen, setPwModalOpen] = useState(false);
   const handleSecurityAction = (label: string) => {
-    toast.info(
-      `${label}…`,
-      "Fitur ini di-mock untuk demo. Di production akan buka modal verifikasi."
-    );
+    if (label === "Password") {
+      setPwModalOpen(true);
+      return;
+    }
+    toast.info(`${label} segera hadir`, "Fitur ini sedang dalam pengembangan.");
   };
 
   const handleDeleteAccount = async () => {
@@ -573,6 +575,31 @@ function DashboardInner() {
                   <div>Status</div>
                   <div></div>
                 </div>
+                {ordersPaged.items.length === 0 && (
+                  <div
+                    style={{
+                      padding: "40px 24px",
+                      textAlign: "center",
+                      color: "var(--ink-soft)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 32,
+                        marginBottom: 10,
+                        opacity: 0.5,
+                      }}
+                    >
+                      📦
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", marginBottom: 4 }}>
+                      Belum ada riwayat order
+                    </div>
+                    <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                      Order pertama kamu akan muncul di sini setelah pembayaran berhasil.
+                    </div>
+                  </div>
+                )}
                 {ordersPaged.items.map((o, i) => {
                   const prod = PRODUCTS.find((p) => p.name === o.product) || PRODUCTS[0];
                   return (
@@ -691,6 +718,63 @@ function DashboardInner() {
                 </p>
               </div>
 
+              {activeOrders.length === 0 ? (
+                <div
+                  style={{
+                    padding: "48px 24px",
+                    textAlign: "center",
+                    background: "var(--surface)",
+                    border: "1.5px dashed var(--border)",
+                    borderRadius: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      margin: "0 auto 16px",
+                      borderRadius: 16,
+                      background: "linear-gradient(135deg, var(--primary), var(--lilac))",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
+                      color: "white",
+                    }}
+                  >
+                    ✦
+                  </div>
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 18,
+                      fontWeight: 700,
+                      margin: "0 0 6px",
+                      color: "var(--ink)",
+                    }}
+                  >
+                    Belum ada langganan aktif
+                  </h3>
+                  <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 20px", lineHeight: 1.6 }}>
+                    Belanja akun premium pertama kamu — streaming, VPN, gaming, dll.
+                  </p>
+                  <Link
+                    href="/catalog"
+                    style={{
+                      display: "inline-block",
+                      padding: "10px 22px",
+                      borderRadius: 999,
+                      background: "var(--ink)",
+                      color: "white",
+                      textDecoration: "none",
+                      fontWeight: 700,
+                      fontSize: 13,
+                    }}
+                  >
+                    Lihat katalog →
+                  </Link>
+                </div>
+              ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {activeOrders.map((o) => {
                   const prod = PRODUCTS.find((p) => p.name === o.product) || PRODUCTS[0];
@@ -934,6 +1018,7 @@ function DashboardInner() {
                   );
                 })}
               </div>
+              )}
             </div>
           )}
 
@@ -1038,9 +1123,9 @@ function DashboardInner() {
                     </div>
                     <div style={{ padding: 18 }}>
                       {[
-                        { l: "Password", s: "Terakhir diubah 2 bulan lalu", a: "Ubah" },
-                        { l: "2-Factor auth", s: "Belum aktif", a: "Aktifkan" },
-                        { l: "Sesi aktif", s: "2 perangkat", a: "Kelola" },
+                        { l: "Password", s: "Ubah password akun", a: "Ubah" },
+                        { l: "2-Factor auth", s: "Segera hadir", a: "Coming soon" },
+                        { l: "Sesi aktif", s: "Segera hadir", a: "Coming soon" },
                       ].map((r, i, arr) => (
                         <div
                           key={r.l}
@@ -1287,7 +1372,7 @@ function DashboardInner() {
           )}
         </div>
       </div>
-      <Footer />
+      <ChangePasswordModal open={pwModalOpen} onClose={() => setPwModalOpen(false)} />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ProductTile } from "@/components/store/ProductTile";
-import { Footer } from "@/components/store/Footer";
 import { useStore } from "@/components/store/StoreProvider";
 import type { Product } from "@/lib/types";
 
@@ -621,7 +620,6 @@ export default function ProductDetailClient({ product }: Props) {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

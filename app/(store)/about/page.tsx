@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Footer } from "@/components/store/Footer";
 
 export const metadata: Metadata = {
   title: "Tentang kami",
@@ -155,7 +154,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

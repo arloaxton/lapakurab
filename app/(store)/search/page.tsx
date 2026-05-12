@@ -4,7 +4,6 @@
  */
 
 import { ProductCard } from "@/components/store/ProductCard";
-import { Footer } from "@/components/store/Footer";
 import { searchProducts } from "@/lib/data/products-repo";
 
 interface Props {
@@ -66,7 +65,6 @@ export default async function SearchPage({ searchParams }: Props) {
           ))}
         </div>
       )}
-      <Footer />
     </div>
   );
 }

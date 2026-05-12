@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Footer } from "@/components/store/Footer";
 
 export const metadata: Metadata = {
   title: "Bantuan",
@@ -127,7 +126,6 @@ export default function HelpPage() {
         — kebanyakan pertanyaan udah ke-cover di sana.
       </div>
 
-      <Footer />
     </div>
   );
 }
