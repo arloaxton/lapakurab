@@ -56,6 +56,17 @@ export const CREDENTIAL_FORMATS: CredentialFormatDef[] = [
     },
   },
   {
+    id: "email_profile_pin",
+    label: "Email + Profil + PIN",
+    hint: "Cocok untuk Netflix sharing (akses 1 profil)",
+    fields: {
+      field1: { label: "Email", required: true, placeholder: "user@mail.com" },
+      field2: { label: "Profil", required: true, placeholder: "Profile 1" },
+      field3: { label: "PIN", required: true, placeholder: "1234", sensitive: true },
+      notes: { label: "Catatan (opsional)", required: false, multiline: true },
+    },
+  },
+  {
     id: "key_only",
     label: "License Key",
     hint: "Cocok untuk Windows, Office, software license",

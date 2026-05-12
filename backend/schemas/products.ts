@@ -23,7 +23,15 @@ const baseFields = {
   active: z.boolean().optional(),
   imageUrl: z.string().trim().max(500).optional().nullable(),
   credentialFormat: z
-    .enum(["email_password", "email_pin", "key_only", "link_only", "cookie", "custom"])
+    .enum([
+      "email_password",
+      "email_pin",
+      "email_profile_pin",
+      "key_only",
+      "link_only",
+      "cookie",
+      "custom",
+    ])
     .optional(),
 };
 
