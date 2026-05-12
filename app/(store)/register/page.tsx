@@ -43,8 +43,8 @@ function RegisterInner() {
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [submitting, setSubmitting] = useState(false);
-  // OTP length = 8 (Supabase mailer_otp_length project ini = 8).
-  const OTP_LEN = 8;
+  // OTP length = 6 (Supabase mailer_otp_length project ini di-set 6).
+  const OTP_LEN = 6;
   const [otp, setOtp] = useState<string[]>(Array(OTP_LEN).fill(""));
   const [otpError, setOtpError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
@@ -365,10 +365,9 @@ function RegisterInner() {
             <div
               style={{
                 display: "flex",
-                gap: 6,
+                gap: 8,
                 marginBottom: 14,
                 justifyContent: "center",
-                flexWrap: "nowrap",
               }}
               onPaste={onOtpPaste}
             >
@@ -386,10 +385,10 @@ function RegisterInner() {
                     disabled={verifying}
                     className="lk-otp-input"
                     style={{
-                      width: 38,
-                      height: 52,
+                      width: 48,
+                      height: 60,
                       textAlign: "center",
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: 600,
                       fontFamily: "var(--font-display)",
                       borderRadius: 10,
@@ -407,7 +406,7 @@ function RegisterInner() {
                       opacity: verifying ? 0.5 : 1,
                     }}
                   />
-                  {i === 3 && (
+                  {i === 2 && (
                     <div
                       style={{
                         display: "flex",
