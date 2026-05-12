@@ -3,12 +3,15 @@
 
 // ─── Storefront ─────────────────────────────────────────────────────────────
 
-export type ProductCategory = "all" | "streaming" | "vpn";
+// Filter UI pakai "all" untuk no-filter. Category slug = string apa saja.
+export type ProductCategory = string;
+export type CatFilter = "all" | string;
 
 export interface Product {
   id: string;
   name: string;
-  cat: Exclude<ProductCategory, "all">;
+  /** Category slug (DB FK: category_id). Boleh null kalau kategori dihapus. */
+  cat: string;
   tagline: string;
   priceIDR: number;
   oldIDR: number;
@@ -23,9 +26,12 @@ export interface Product {
 }
 
 export interface Category {
-  id: ProductCategory;
+  id: string;
   label: string;
   emoji: string;
+  description?: string | null;
+  sortOrder?: number;
+  active?: boolean;
 }
 
 export interface Review {

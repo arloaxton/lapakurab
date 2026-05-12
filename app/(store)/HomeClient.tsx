@@ -5,13 +5,22 @@ import { ProductTile } from "@/components/store/ProductTile";
 import { ProductCard } from "@/components/store/ProductCard";
 import { Footer } from "@/components/store/Footer";
 import { useStore } from "@/components/store/StoreProvider";
-import type { Product } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 
 interface Props {
   products: Product[];
+  categories: Category[];
 }
 
-export default function HomeClient({ products }: Props) {
+// Default hue per slug fallback (kalau category baru belum punya warna)
+const CATEGORY_HUES: Record<string, number> = {
+  streaming: 340,
+  vpn: 220,
+  gaming: 120,
+  productivity: 30,
+};
+
+export default function HomeClient({ products, categories }: Props) {
   const { fmt } = useStore();
   const featured = products.slice(0, 4);
 
@@ -254,9 +263,20 @@ export default function HomeClient({ products }: Props) {
         style={{ marginBottom: 48 }}
       >
         {[
-          { id: "streaming", label: "Streaming", desc: "Netflix, Spotify, Disney+ & lainnya", emoji: "▶", hue: 340 },
-          { id: "vpn", label: "VPN", desc: "Privasi & akses tanpa batas", emoji: "◈", hue: 220 },
-          { id: "all", label: "Semua produk", desc: "Lihat seluruh katalog kami", emoji: "✦", hue: 140 },
+          ...categories.map((c, i) => ({
+            id: c.id,
+            label: c.label,
+            desc: c.description || "Akun premium berkualitas",
+            emoji: c.emoji || "✦",
+            hue: CATEGORY_HUES[c.id] ?? ((i * 70 + 140) % 360),
+          })),
+          {
+            id: "all",
+            label: "Semua produk",
+            desc: "Lihat seluruh katalog kami",
+            emoji: "✦",
+            hue: 140,
+          },
         ].map((c) => (
           <Link
             key={c.id}

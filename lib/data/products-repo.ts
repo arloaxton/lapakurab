@@ -24,7 +24,8 @@ function rowToProduct(r: ProductRow): Product {
   return {
     id: r.id,
     name: r.name,
-    cat: r.cat,
+    // DB column 'category_id' → TS field 'cat' (slug). Empty string kalau FK null.
+    cat: r.category_id ?? "",
     tagline: r.tagline,
     priceIDR: r.price_idr,
     oldIDR: r.old_idr,
@@ -42,7 +43,8 @@ function rowToProduct(r: ProductRow): Product {
 // ─── List ───────────────────────────────────────────────────────────────
 
 export interface ListProductsOpts {
-  cat?: "all" | "streaming" | "vpn";
+  /** "all" untuk no-filter, atau slug kategori spesifik. */
+  cat?: string;
   /** Filter active only (default true). Admin pakai `false` untuk lihat semua. */
   activeOnly?: boolean;
   /** Limit + offset for pagination. */
@@ -64,7 +66,7 @@ export async function listProducts(opts: ListProductsOpts = {}): Promise<Product
   const sb = await getServerClient();
   let query = sb.from("products").select("*").order("created_at", { ascending: false });
   if (opts.activeOnly !== false) query = query.eq("active", true);
-  if (opts.cat && opts.cat !== "all") query = query.eq("cat", opts.cat);
+  if (opts.cat && opts.cat !== "all") query = query.eq("category_id", opts.cat);
   if (opts.limit) query = query.range(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit - 1);
 
   const { data, error } = await query;
@@ -117,7 +119,7 @@ export async function searchProducts(q: string): Promise<Product[]> {
     .from("products")
     .select("*")
     .eq("active", true)
-    .or(`name.ilike.${pattern},tagline.ilike.${pattern},cat.ilike.${pattern}`);
+    .or(`name.ilike.${pattern},tagline.ilike.${pattern},category_id.ilike.${pattern}`);
   if (error) throw new Error(error.message);
   return ((data as ProductRow[] | null) ?? []).map(rowToProduct);
 }
@@ -136,7 +138,7 @@ export async function createProduct(input: Omit<Product, "id"> & { id?: string }
   const insertRow: Record<string, unknown> = {
     id,
     name: input.name,
-    cat: input.cat,
+    category_id: input.cat,
     tagline: input.tagline,
     price_idr: input.priceIDR,
     old_idr: input.oldIDR,
@@ -162,7 +164,7 @@ export async function updateProduct(id: string, patch: Partial<Product>): Promis
   const sb = await getServerClient();
   const dbPatch: Record<string, unknown> = {};
   if (patch.name !== undefined) dbPatch.name = patch.name;
-  if (patch.cat !== undefined) dbPatch.cat = patch.cat;
+  if (patch.cat !== undefined) dbPatch.category_id = patch.cat;
   if (patch.tagline !== undefined) dbPatch.tagline = patch.tagline;
   if (patch.priceIDR !== undefined) dbPatch.price_idr = patch.priceIDR;
   if (patch.oldIDR !== undefined) dbPatch.old_idr = patch.oldIDR;

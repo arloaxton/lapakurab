@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 interface FormRowProps {
   label: string;
   required?: boolean;
+  /** Helper text di bawah field (12px, ink-soft). */
+  hint?: string;
   children: ReactNode;
 }
 
-export function FormRow({ label, required, children }: FormRowProps) {
+export function FormRow({ label, required, hint, children }: FormRowProps) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label
@@ -22,6 +24,18 @@ export function FormRow({ label, required, children }: FormRowProps) {
         {required && <span style={{ color: "var(--danger)", marginLeft: 3 }}>*</span>}
       </label>
       {children}
+      {hint && (
+        <div
+          style={{
+            marginTop: 4,
+            fontSize: 11,
+            color: "var(--ink-soft)",
+            lineHeight: 1.4,
+          }}
+        >
+          {hint}
+        </div>
+      )}
     </div>
   );
 }

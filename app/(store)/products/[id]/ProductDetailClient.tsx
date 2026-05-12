@@ -155,7 +155,7 @@ export default function ProductDetailClient({ product }: Props) {
                 letterSpacing: "0.02em",
               }}
             >
-              ● {product.cat === "streaming" ? "Streaming" : "VPN"}
+              ● {product.cat || "Premium"}
             </span>
             {product.stock <= 5 && (
               <span
@@ -574,22 +574,12 @@ export default function ProductDetailClient({ product }: Props) {
               <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--ink-soft)" }}>
                 <p>
                   Akun {product.name} resmi dengan kualitas {product.tagline}.
-                  Cocok buat kamu yang suka{" "}
-                  {product.cat === "streaming"
-                    ? "nonton serial favorit, film terbaru, dan konten eksklusif"
-                    : "browsing aman, akses tanpa batas geografis, dan privasi maksimal"}
-                  .
                 </p>
                 <ul style={{ paddingLeft: 20, marginTop: 12 }}>
                   <li>Akun private, bukan sharing</li>
                   <li>Garansi full selama masa aktif</li>
-                  <li>
-                    Bisa diakses di{" "}
-                    {product.cat === "streaming"
-                      ? "TV, laptop, HP, tablet"
-                      : "semua device"}
-                  </li>
                   <li>Pengiriman otomatis via email & dashboard</li>
+                  <li>Customer support 24/7 kalau ada masalah</li>
                 </ul>
               </div>
             )}

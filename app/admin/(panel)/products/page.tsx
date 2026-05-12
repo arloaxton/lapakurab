@@ -274,7 +274,7 @@ export default function AdminProductsPage() {
               letterSpacing: "0.04em",
             }}
           >
-            {p.cat === "vpn" ? "VPN" : "Streaming"}
+            {p.cat || "—"}
           </span>,
           <div key="p">
             <div style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>

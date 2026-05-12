@@ -54,7 +54,7 @@ export interface ProfileRow {
 export interface ProductRow {
   id: string;
   name: string;
-  cat: "streaming" | "vpn";
+  category_id: string | null;
   tagline: string;
   price_idr: number;
   old_idr: number;
@@ -66,6 +66,17 @@ export interface ProductRow {
   emoji: string | null;
   active: boolean;
   image_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryRow {
+  id: string;
+  label: string;
+  emoji: string | null;
+  description: string | null;
+  sort_order: number;
+  active: boolean;
   created_at: string;
   updated_at: string;
 }

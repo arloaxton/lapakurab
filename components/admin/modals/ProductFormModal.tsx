@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Modal } from "../Modal";
 import { FormRow } from "../FormRow";
@@ -8,8 +8,10 @@ import { Field } from "@/components/shared/Field";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { adminInputStyle, primaryBtn, secondaryBtn } from "../ui-styles";
-import type { Product } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 import { isSupabaseConfigured } from "@/backend/env";
+import { fetchCategories } from "@/lib/data/categories-client";
+import { CATEGORIES as MOCK_CATEGORIES } from "@/lib/mock/categories";
 
 interface ProductFormModalProps {
   product: Product | null;
@@ -20,7 +22,7 @@ interface ProductFormModalProps {
 const DEFAULT_PRODUCT: Product = {
   id: "",
   name: "",
-  cat: "streaming",
+  cat: "", // di-isi via dropdown setelah categories di-fetch
   tagline: "",
   priceIDR: 0,
   oldIDR: 0,
@@ -36,6 +38,34 @@ const DEFAULT_PRODUCT: Product = {
 export function ProductFormModal({ product, onClose, onSave }: ProductFormModalProps) {
   const toast = useToast();
   const initial: Product = product || DEFAULT_PRODUCT;
+
+  // Fetch categories aktif dari DB (untuk dropdown). Fallback ke mock kalau
+  // Supabase belum di-konfig.
+  const [categories, setCategories] = useState<Category[]>(() =>
+    MOCK_CATEGORIES.filter((c) => c.id !== "all")
+  );
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let alive = true;
+    fetchCategories({ admin: true })
+      .then((list) => {
+        if (alive && list.length > 0) setCategories(list);
+      })
+      .catch(() => {
+        /* keep fallback */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Auto-select kategori pertama (yang aktif) kalau form.cat kosong / invalid.
+  useEffect(() => {
+    if (form.cat) return;
+    const firstActive = categories.find((c) => c.active !== false);
+    if (firstActive) setField("cat", firstActive.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
 
   const { values: form, errors, touched, setField, blur, validate, touchAll } =
     useFormValidation<Product>(initial, {
@@ -173,14 +203,44 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
       </Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="Kategori">
-          <select
-            value={form.cat}
-            onChange={(e) => upd("cat", e.target.value as Product["cat"])}
-            style={adminInputStyle}
-          >
-            <option value="streaming">Streaming</option>
-            <option value="vpn">VPN</option>
-          </select>
+          {categories.length === 0 ? (
+            <div
+              style={{
+                ...adminInputStyle,
+                color: "var(--danger, #DC2626)",
+                fontSize: 12,
+                lineHeight: 1.5,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              Belum ada kategori. Tambah dulu di{" "}
+              <a
+                href="/admin/categories"
+                style={{ color: "var(--primary)", fontWeight: 600, marginLeft: 4 }}
+              >
+                /admin/categories
+              </a>
+            </div>
+          ) : (
+            <select
+              value={form.cat}
+              onChange={(e) => upd("cat", e.target.value)}
+              style={adminInputStyle}
+            >
+              {!categories.find((c) => c.id === form.cat) && (
+                <option value="" disabled>
+                  — pilih kategori —
+                </option>
+              )}
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.emoji} {c.label}
+                  {c.active === false ? " (nonaktif)" : ""}
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
         <Field label="Stok" error={touched.stock ? errors.stock : null}>
           <input

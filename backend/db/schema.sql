@@ -77,12 +77,40 @@ create trigger profiles_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ════════════════════════════════════════════════════════════════════════
+--  categories — dynamic, admin-managed
+-- ════════════════════════════════════════════════════════════════════════
+create table if not exists public.categories (
+  id text primary key,                          -- slug, mis. 'streaming'
+  label text not null,                          -- display name
+  emoji text default '✦',
+  description text,
+  sort_order int not null default 100,
+  active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists categories_active_idx on public.categories(active);
+create index if not exists categories_sort_idx on public.categories(sort_order);
+
+drop trigger if exists categories_set_updated_at on public.categories;
+create trigger categories_set_updated_at
+  before update on public.categories
+  for each row execute function public.set_updated_at();
+
+-- Seed minimal 2 kategori awal supaya admin punya starting point
+insert into public.categories (id, label, emoji, sort_order, active) values
+  ('streaming', 'Streaming', '▶', 10, true),
+  ('vpn', 'VPN', '◈', 20, true)
+on conflict (id) do nothing;
+
+-- ════════════════════════════════════════════════════════════════════════
 --  products
 -- ════════════════════════════════════════════════════════════════════════
 create table if not exists public.products (
   id text primary key,
   name text not null,
-  cat text not null check (cat in ('streaming', 'vpn')),
+  category_id text references public.categories(id) on delete set null,
   tagline text not null,
   price_idr int not null check (price_idr > 0),
   old_idr int not null check (old_idr >= price_idr),
@@ -98,7 +126,7 @@ create table if not exists public.products (
   updated_at timestamptz default now()
 );
 
-create index if not exists products_cat_idx on public.products(cat);
+create index if not exists products_category_id_idx on public.products(category_id);
 create index if not exists products_active_idx on public.products(active);
 create index if not exists products_name_trgm_idx on public.products using gin (name gin_trgm_ops);
 

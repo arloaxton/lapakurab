@@ -6,9 +6,8 @@ import { ProductCard } from "@/components/store/ProductCard";
 import { Footer } from "@/components/store/Footer";
 import { Pagination } from "@/components/shared/Pagination";
 import { usePagination } from "@/hooks/usePagination";
-import { CATEGORIES } from "@/lib/mock";
 import { fmtIDR } from "@/lib/format";
-import type { Product } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 
 const SORT_OPTIONS = [
   { id: "popular", label: "Populer" },
@@ -21,31 +20,39 @@ type SortKey = (typeof SORT_OPTIONS)[number]["id"];
 
 interface Props {
   initialProducts: Product[];
+  categories: Category[];
 }
 
-export default function CatalogClient({ initialProducts }: Props) {
+export default function CatalogClient({ initialProducts, categories }: Props) {
   return (
     <Suspense fallback={null}>
-      <CatalogInner initialProducts={initialProducts} />
+      <CatalogInner initialProducts={initialProducts} categories={categories} />
     </Suspense>
   );
 }
 
-type CatId = "all" | "streaming" | "vpn";
-
-function CatalogInner({ initialProducts }: Props) {
+function CatalogInner({ initialProducts, categories }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
 
+  // Build category filter list ("all" + DB categories). Single source of truth.
+  const filterCategories = useMemo(
+    () => [
+      { id: "all", label: "Semua", emoji: "✦" } as Category,
+      ...categories,
+    ],
+    [categories]
+  );
+
   // Init dari URL hanya sekali (saat mount). Selanjutnya local state.
   // Ini bikin slider & chip kategori instan responsif (no router round-trip).
   const initRef = useRef({
-    cat: (sp.get("cat") ?? "all") as CatId,
+    cat: sp.get("cat") ?? "all",
     sort: (sp.get("sort") ?? "popular") as SortKey,
     maxPrice: Number(sp.get("maxPrice") ?? "50000"),
   });
-  const [cat, setCat] = useState<CatId>(initRef.current.cat);
+  const [cat, setCat] = useState<string>(initRef.current.cat);
   const [sort, setSort] = useState<SortKey>(initRef.current.sort);
   const [maxPrice, setMaxPrice] = useState<number>(initRef.current.maxPrice);
   // Products datang dari server — tidak perlu fetch ulang.
@@ -120,10 +127,10 @@ function CatalogInner({ initialProducts }: Props) {
             Kategori
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24 }}>
-            {CATEGORIES.map((c) => (
+            {filterCategories.map((c) => (
               <button
                 key={c.id}
-                onClick={() => setCat(c.id as CatId)}
+                onClick={() => setCat(c.id)}
                 style={{
                   padding: "10px 12px",
                   borderRadius: 12,

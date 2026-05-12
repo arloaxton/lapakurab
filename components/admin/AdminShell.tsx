@@ -19,6 +19,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/admin", icon: "M3 12l2-2 4 4 8-8 2 2-10 10-6-6z" },
   { id: "products", label: "Produk", href: "/admin/products", icon: "M20 7L12 3 4 7v10l8 4 8-4V7zM12 12L4 8m8 4l8-4m-8 4v9" },
+  { id: "categories", label: "Kategori", href: "/admin/categories", icon: "M4 6h16M4 12h16M4 18h16" },
   { id: "orders", label: "Pesanan", href: "/admin/orders", icon: "M9 11l3 3 8-8M3 12c0 5 4 9 9 9s9-4 9-9-4-9-9-9" },
   { id: "stock", label: "Stok akun", href: "/admin/stock", icon: "M21 8v13H3V8M1 3h22v5H1zM10 12h4" },
   { id: "users", label: "Member", href: "/admin/users", icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
