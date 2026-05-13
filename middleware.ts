@@ -90,8 +90,19 @@ export async function middleware(request: NextRequest) {
   const isAuthOnlyPage = path === "/login" || path === "/register";
   if (user && isAuthOnlyPage) {
     const nextParam = request.nextUrl.searchParams.get("next");
-    const target = nextParam && nextParam.startsWith("/") ? nextParam : "/dashboard";
-    return NextResponse.redirect(new URL(target, request.url));
+    const target =
+      nextParam && nextParam.startsWith("/") ? nextParam : "/dashboard";
+    // Build redirect URL pakai forwarded host (di belakang Caddy/nginx,
+    // `request.url` bisa jadi internal http://localhost:3000 — pakai
+    // x-forwarded-host + x-forwarded-proto biar URL eksternal benar).
+    const forwardedHost =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      request.nextUrl.host;
+    const forwardedProto =
+      request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(/:$/, "") || "https";
+    const redirectUrl = new URL(target, `${forwardedProto}://${forwardedHost}`);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;

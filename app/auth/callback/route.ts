@@ -15,12 +15,23 @@ export async function GET(req: NextRequest) {
   const nextParam = url.searchParams.get("next");
   const next = nextParam && nextParam.startsWith("/") ? nextParam : "/";
 
+  // Build base eksternal dari forwarded headers — di belakang Caddy/nginx,
+  // req.url bisa jadi http://localhost:3000. Pakai x-forwarded-host +
+  // x-forwarded-proto biar redirect arah ke domain user, bukan internal.
+  const forwardedHost =
+    req.headers.get("x-forwarded-host") ||
+    req.headers.get("host") ||
+    url.host;
+  const forwardedProto =
+    req.headers.get("x-forwarded-proto") || url.protocol.replace(/:$/, "") || "https";
+  const externalBase = `${forwardedProto}://${forwardedHost}`;
+
   if (!code) {
-    return NextResponse.redirect(new URL("/login?error=no_code", req.url));
+    return NextResponse.redirect(new URL("/login?error=no_code", externalBase));
   }
   if (!isSupabaseConfigured()) {
     return NextResponse.redirect(
-      new URL("/login?error=backend_not_configured", req.url)
+      new URL("/login?error=backend_not_configured", externalBase)
     );
   }
 
@@ -28,9 +39,9 @@ export async function GET(req: NextRequest) {
   const { error } = await sb.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(error.message)}`, req.url)
+      new URL(`/login?error=${encodeURIComponent(error.message)}`, externalBase)
     );
   }
 
-  return NextResponse.redirect(new URL(next, req.url));
+  return NextResponse.redirect(new URL(next, externalBase));
 }
