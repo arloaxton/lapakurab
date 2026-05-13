@@ -205,15 +205,20 @@ export interface MyCredentialRow {
   field2: string;
   field3: string;
   notes: string;
+  credentialFormat: string;
 }
 
 export async function listMyCredentials(): Promise<MyCredentialRow[]> {
   if (!isSupabaseConfigured()) return [];
   const { getServerClient } = await import("@/backend/db/server-client");
   const sb = await getServerClient();
+  // JOIN products supaya tau credential_format-nya — UI render label
+  // field dinamis (email|password vs email|profile|pin vs key_only, dll).
   const { data, error } = await sb
     .from("stock_items")
-    .select("field1, field2, field3, notes, order_id, product_id")
+    .select(
+      "field1, field2, field3, notes, order_id, product_id, products:product_id(credential_format)"
+    )
     .not("order_id", "is", null);
   if (error) throw new Error(error.message);
   type Row = {
@@ -223,6 +228,7 @@ export async function listMyCredentials(): Promise<MyCredentialRow[]> {
     notes: string | null;
     order_id: string;
     product_id: string | null;
+    products: { credential_format: string | null } | null;
   };
   return ((data as Row[] | null) ?? []).map((r) => ({
     orderId: r.order_id,
@@ -231,5 +237,6 @@ export async function listMyCredentials(): Promise<MyCredentialRow[]> {
     field2: r.field2 ?? "",
     field3: r.field3 ?? "",
     notes: r.notes ?? "",
+    credentialFormat: r.products?.credential_format ?? "email_password",
   }));
 }

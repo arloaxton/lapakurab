@@ -8,6 +8,7 @@ import { ProductTile } from "@/components/store/ProductTile";
 import { AuthFormField } from "@/components/store/AuthFormField";
 import { ChangePasswordModal } from "@/components/store/ChangePasswordModal";
 import { NetflixOtpButton } from "@/components/store/NetflixOtpButton";
+import { getCredentialFormat } from "@/lib/credential-format";
 import { useToast } from "@/components/shared/ToastProvider";
 import { Pagination } from "@/components/shared/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -883,104 +884,135 @@ function DashboardInner() {
                         />
                       </div>
 
-                      <div
-                        className="lk-sub-creds"
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: 8,
-                          marginBottom: 14,
-                        }}
-                      >
-                        <div
-                          style={{
-                            background: "var(--surface-2)",
-                            borderRadius: 8,
-                            padding: "10px 12px",
-                            border: "1px solid var(--border)",
-                          }}
-                        >
+                      {(() => {
+                        const cred = credByOrder.get(o.id);
+                        const fmt = getCredentialFormat(cred?.credentialFormat);
+                        const slots: Array<{
+                          key: "field1" | "field2" | "field3";
+                          label: string;
+                          value: string;
+                          sensitive: boolean;
+                        }> = [];
+                        if (fmt.fields.field1) {
+                          slots.push({
+                            key: "field1",
+                            label: fmt.fields.field1.label,
+                            value: cred?.field1 || credFor(o.id).email,
+                            sensitive: !!fmt.fields.field1.sensitive,
+                          });
+                        }
+                        if (fmt.fields.field2) {
+                          slots.push({
+                            key: "field2",
+                            label: fmt.fields.field2.label,
+                            value: cred?.field2 || credFor(o.id).password,
+                            sensitive: !!fmt.fields.field2.sensitive,
+                          });
+                        }
+                        if (fmt.fields.field3) {
+                          slots.push({
+                            key: "field3",
+                            label: fmt.fields.field3.label,
+                            value: cred?.field3 || "",
+                            sensitive: !!fmt.fields.field3.sensitive,
+                          });
+                        }
+                        const cols = slots.length === 1 ? "1fr" : slots.length === 3 ? "1fr 1fr 1fr" : "1fr 1fr";
+                        return (
                           <div
+                            className="lk-sub-creds"
                             style={{
-                              fontSize: 10,
-                              fontWeight: 600,
-                              color: "var(--ink-soft)",
-                              marginBottom: 3,
-                              letterSpacing: "0.04em",
-                              textTransform: "uppercase",
+                              display: "grid",
+                              gridTemplateColumns: cols,
+                              gap: 8,
+                              marginBottom: 14,
                             }}
                           >
-                            Email
+                            {slots.map((s) => {
+                              const revealKey = `${o.id}:${s.key}`;
+                              const isRevealed = revealed.has(revealKey);
+                              const masked = s.sensitive && !isRevealed;
+                              return (
+                                <div
+                                  key={s.key}
+                                  style={{
+                                    background: "var(--surface-2)",
+                                    borderRadius: 8,
+                                    padding: "10px 12px",
+                                    border: "1px solid var(--border)",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: 600,
+                                      color: "var(--ink-soft)",
+                                      marginBottom: 3,
+                                      letterSpacing: "0.04em",
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    {s.label}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      color: "var(--ink)",
+                                      gap: 6,
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        flex: 1,
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {masked ? "••••••••" : s.value || "—"}
+                                    </span>
+                                    {s.sensitive && (
+                                      <button
+                                        onClick={() => toggleReveal(revealKey)}
+                                        style={{
+                                          background: "none",
+                                          border: 0,
+                                          color: "var(--ink-soft)",
+                                          cursor: "pointer",
+                                          fontSize: 11,
+                                          fontWeight: 500,
+                                          padding: 0,
+                                          fontFamily: "inherit",
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        {isRevealed ? "Sembunyi" : "Lihat"}
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                          <div
-                            style={{
-                              fontFamily: "var(--font-mono), ui-monospace, monospace",
-                              fontSize: 12,
-                              fontWeight: 500,
-                              color: "var(--ink)",
-                            }}
-                          >
-                            {credFor(o.id).email}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            background: "var(--surface-2)",
-                            borderRadius: 8,
-                            padding: "10px 12px",
-                            border: "1px solid var(--border)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 600,
-                              color: "var(--ink-soft)",
-                              marginBottom: 3,
-                              letterSpacing: "0.04em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            Password
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: "var(--font-mono), ui-monospace, monospace",
-                              fontSize: 12,
-                              fontWeight: 500,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              color: "var(--ink)",
-                            }}
-                          >
-                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {revealed.has(o.id) ? credFor(o.id).password : "••••••••"}
-                            </span>
-                            <button
-                              onClick={() => toggleReveal(o.id)}
-                              style={{
-                                background: "none",
-                                border: 0,
-                                color: "var(--ink-soft)",
-                                cursor: "pointer",
-                                fontSize: 11,
-                                fontWeight: 500,
-                                padding: 0,
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              {revealed.has(o.id) ? "Sembunyi" : "Lihat"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                        );
+                      })()}
 
                       <div style={{ display: "flex", gap: 8 }}>
                         <button
                           onClick={() => {
-                            const c = credFor(o.id);
-                            copy(`Email: ${c.email}\nPassword: ${c.password}`, "Kredensial");
+                            const cred = credByOrder.get(o.id);
+                            const fmt = getCredentialFormat(cred?.credentialFormat);
+                            const lines: string[] = [];
+                            if (fmt.fields.field1) lines.push(`${fmt.fields.field1.label}: ${cred?.field1 || credFor(o.id).email}`);
+                            if (fmt.fields.field2) lines.push(`${fmt.fields.field2.label}: ${cred?.field2 || credFor(o.id).password}`);
+                            if (fmt.fields.field3) lines.push(`${fmt.fields.field3.label}: ${cred?.field3 || ""}`);
+                            copy(lines.join("\n"), "Kredensial");
                           }}
                           style={{
                             flex: 1,

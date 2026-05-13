@@ -95,6 +95,7 @@ export interface MyCredential {
   field2: string;
   field3: string;
   notes: string;
+  credentialFormat: string;
 }
 
 export async function fetchMyCredentials(): Promise<MyCredential[]> {
