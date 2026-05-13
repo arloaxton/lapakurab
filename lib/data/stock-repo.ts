@@ -221,6 +221,9 @@ export async function listMyCredentials(): Promise<MyCredentialRow[]> {
     )
     .not("order_id", "is", null);
   if (error) throw new Error(error.message);
+  // Supabase nested select FK: bisa return single object ATAU array
+  // tergantung konfigurasi. Handle keduanya defensif.
+  type ProductRel = { credential_format: string | null };
   type Row = {
     field1: string;
     field2: string | null;
@@ -228,13 +231,12 @@ export async function listMyCredentials(): Promise<MyCredentialRow[]> {
     notes: string | null;
     order_id: string;
     product_id: string | null;
-    // Supabase nested select FK return array (bahkan untuk to-one).
-    products: { credential_format: string | null }[] | null;
+    products: ProductRel | ProductRel[] | null;
   };
-  return ((data as Row[] | null) ?? []).map((r) => {
-    const fmt = Array.isArray(r.products) && r.products.length > 0
-      ? r.products[0].credential_format
-      : null;
+  return ((data as unknown as Row[] | null) ?? []).map((r) => {
+    const rel = r.products;
+    const productObj = Array.isArray(rel) ? rel[0] : rel;
+    const fmt = productObj?.credential_format ?? null;
     return {
       orderId: r.order_id,
       productId: r.product_id,
