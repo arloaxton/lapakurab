@@ -228,15 +228,21 @@ export async function listMyCredentials(): Promise<MyCredentialRow[]> {
     notes: string | null;
     order_id: string;
     product_id: string | null;
-    products: { credential_format: string | null } | null;
+    // Supabase nested select FK return array (bahkan untuk to-one).
+    products: { credential_format: string | null }[] | null;
   };
-  return ((data as Row[] | null) ?? []).map((r) => ({
-    orderId: r.order_id,
-    productId: r.product_id,
-    field1: r.field1,
-    field2: r.field2 ?? "",
-    field3: r.field3 ?? "",
-    notes: r.notes ?? "",
-    credentialFormat: r.products?.credential_format ?? "email_password",
-  }));
+  return ((data as Row[] | null) ?? []).map((r) => {
+    const fmt = Array.isArray(r.products) && r.products.length > 0
+      ? r.products[0].credential_format
+      : null;
+    return {
+      orderId: r.order_id,
+      productId: r.product_id,
+      field1: r.field1,
+      field2: r.field2 ?? "",
+      field3: r.field3 ?? "",
+      notes: r.notes ?? "",
+      credentialFormat: fmt ?? "email_password",
+    };
+  });
 }
