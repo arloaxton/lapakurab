@@ -187,7 +187,18 @@ export async function createOrder(
   // Auto-deliver: coba claim 1 stock available. Kalau habis, order tetap 'paid'.
   try {
     const { claimStockForOrder } = await import("@/lib/data/stock-repo");
-    await claimStockForOrder(id, input.productId, input.accountType ?? "private");
+    const claimed = await claimStockForOrder(
+      id,
+      input.productId,
+      input.accountType ?? "private"
+    );
+    if (claimed) {
+      // Set expires_at = sekarang + durasi langganan (mis. "1 Bulan" = 30 hari)
+      const { durationToDays } = await import("@/lib/duration");
+      const days = durationToDays(input.duration);
+      const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+      await sb.from("orders").update({ expires_at: expiresAt }).eq("id", id);
+    }
     // Re-fetch order (status bisa berubah ke 'delivered' kalau stock ke-claim)
     const { data: refreshed } = await sb
       .from("orders")
@@ -335,6 +346,11 @@ export async function settlePaymentRef(paymentRef: string): Promise<{
       );
       if (cred) {
         delivered += 1;
+        // Set expires_at = now + durasi
+        const { durationToDays } = await import("@/lib/duration");
+        const days = durationToDays(o.duration);
+        const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        await sb.from("orders").update({ expires_at: expiresAt }).eq("id", o.id);
         // Best-effort email — TIDAK block webhook response.
         sendCredentialEmailFor({
           orderId: o.id,

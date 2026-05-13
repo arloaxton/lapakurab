@@ -1029,23 +1029,6 @@ function DashboardInner() {
                         >
                           Salin kredensial
                         </button>
-                        <button
-                          onClick={() => router.push(`/products/${prod.id}`)}
-                          style={{
-                            flex: 1,
-                            padding: "9px 14px",
-                            borderRadius: 8,
-                            border: 0,
-                            cursor: "pointer",
-                            background: "var(--ink)",
-                            color: "white",
-                            fontWeight: 500,
-                            fontSize: 12,
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          {expiringSoon ? "Perpanjang sekarang" : "Perpanjang"}
-                        </button>
                       </div>
 
                       {/* Auto-fetch OTP Netflix kalau product = Netflix */}
