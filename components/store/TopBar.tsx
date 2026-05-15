@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "./StoreProvider";
 import { NavBtn } from "./NavBtn";
+import { UserMenu } from "./UserMenu";
 import { ProductTile } from "./ProductTile";
 import { highlightMatch } from "./highlight";
 import { PRODUCTS } from "@/lib/mock";
@@ -514,12 +515,18 @@ export function TopBar() {
           <NavBtn href="/catalog" active={pathname === "/catalog"}>
             Katalog
           </NavBtn>
-          <NavBtn
-            href={user ? "/dashboard" : "/login"}
-            active={pathname === "/dashboard" || pathname === "/login"}
-          >
-            {user ? user.name.split(" ")[0] : "Masuk"}
-          </NavBtn>
+          {user ? (
+            <>
+              <NavBtn href="/dashboard" active={pathname === "/dashboard"}>
+                Dashboard
+              </NavBtn>
+              <UserMenu />
+            </>
+          ) : (
+            <NavBtn href="/login" active={pathname === "/login"}>
+              Masuk
+            </NavBtn>
+          )}
           <Link
             href="/cart"
             data-cart-target
