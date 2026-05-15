@@ -17,16 +17,16 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "/admin", icon: "M3 12l2-2 4 4 8-8 2 2-10 10-6-6z" },
-  { id: "products", label: "Produk", href: "/admin/products", icon: "M20 7L12 3 4 7v10l8 4 8-4V7zM12 12L4 8m8 4l8-4m-8 4v9" },
-  { id: "categories", label: "Kategori", href: "/admin/categories", icon: "M4 6h16M4 12h16M4 18h16" },
-  { id: "orders", label: "Pesanan", href: "/admin/orders", icon: "M9 11l3 3 8-8M3 12c0 5 4 9 9 9s9-4 9-9-4-9-9-9" },
-  { id: "stock", label: "Stok akun", href: "/admin/stock", icon: "M21 8v13H3V8M1 3h22v5H1zM10 12h4" },
-  { id: "users", label: "Member", href: "/admin/users", icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-  { id: "vouchers", label: "Voucher", href: "/admin/vouchers", icon: "M2 9V7a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 000-4zm7 0v6" },
-  { id: "gateways", label: "Pembayaran", href: "/admin/gateways", icon: "M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM1 10h22" },
-  { id: "audit", label: "Activity log", href: "/admin/audit", icon: "M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" },
-  { id: "settings", label: "Settings", href: "/admin/settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zm7.4-3a7.5 7.5 0 00-.1-1.4l2-1.6-2-3.4-2.4.9a7.4 7.4 0 00-2.4-1.4L14 2h-4l-.5 2.6a7.4 7.4 0 00-2.4 1.4l-2.4-.9-2 3.4 2 1.6a7.5 7.5 0 000 2.8l-2 1.6 2 3.4 2.4-.9a7.4 7.4 0 002.4 1.4L10 22h4l.5-2.6a7.4 7.4 0 002.4-1.4l2.4.9 2-3.4-2-1.6c.07-.46.1-.93.1-1.4z" },
+  { id: "dashboard", label: "Dashboard", href: "/rabsodi", icon: "M3 12l2-2 4 4 8-8 2 2-10 10-6-6z" },
+  { id: "products", label: "Produk", href: "/rabsodi/products", icon: "M20 7L12 3 4 7v10l8 4 8-4V7zM12 12L4 8m8 4l8-4m-8 4v9" },
+  { id: "categories", label: "Kategori", href: "/rabsodi/categories", icon: "M4 6h16M4 12h16M4 18h16" },
+  { id: "orders", label: "Pesanan", href: "/rabsodi/orders", icon: "M9 11l3 3 8-8M3 12c0 5 4 9 9 9s9-4 9-9-4-9-9-9" },
+  { id: "stock", label: "Stok akun", href: "/rabsodi/stock", icon: "M21 8v13H3V8M1 3h22v5H1zM10 12h4" },
+  { id: "users", label: "Member", href: "/rabsodi/users", icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+  { id: "vouchers", label: "Voucher", href: "/rabsodi/vouchers", icon: "M2 9V7a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 000-4zm7 0v6" },
+  { id: "gateways", label: "Pembayaran", href: "/rabsodi/gateways", icon: "M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM1 10h22" },
+  { id: "audit", label: "Activity log", href: "/rabsodi/audit", icon: "M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" },
+  { id: "settings", label: "Settings", href: "/rabsodi/settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zm7.4-3a7.5 7.5 0 00-.1-1.4l2-1.6-2-3.4-2.4.9a7.4 7.4 0 00-2.4-1.4L14 2h-4l-.5 2.6a7.4 7.4 0 00-2.4 1.4l-2.4-.9-2 3.4 2 1.6a7.5 7.5 0 000 2.8l-2 1.6 2 3.4 2.4-.9a7.4 7.4 0 002.4 1.4L10 22h4l.5-2.6a7.4 7.4 0 002.4-1.4l2.4.9 2-3.4-2-1.6c.07-.46.1-.93.1-1.4z" },
 ];
 
 const NOTIF_PALETTE: Record<NotificationKind | "info", string> = {
@@ -38,7 +38,7 @@ const NOTIF_PALETTE: Record<NotificationKind | "info", string> = {
 };
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/admin") return pathname === "/admin";
+  if (href === "/rabsodi") return pathname === "/rabsodi";
   return pathname === href || pathname.startsWith(href + "/");
 }
 

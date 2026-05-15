@@ -38,38 +38,38 @@ export function OnboardingChecklist() {
       id: "product",
       label: "Tambah produk pertama",
       done: products.length > 8, // SEED has 8 products; >8 = added new
-      href: "/admin/products",
+      href: "/rabsodi/products",
     },
     {
       id: "cs",
       label: "Set nomor WhatsApp CS",
       done: !!hasCustomCS,
-      href: "/admin/settings",
+      href: "/rabsodi/settings",
     },
     {
       id: "stock",
       label: "Tambah stok kredensial",
       done: stock.length > 5, // SEED has 5
-      href: "/admin/stock",
+      href: "/rabsodi/stock",
     },
     {
       id: "gateway",
       label: "Aktifkan payment gateway",
       done: enabledGateways > 0,
-      href: "/admin/gateways",
+      href: "/rabsodi/gateways",
     },
     {
       id: "voucher",
       label: "Buat voucher promo",
       done: vouchers.length > 4, // SEED has 4
-      href: "/admin/vouchers",
+      href: "/rabsodi/vouchers",
       optional: true,
     },
     {
       id: "order",
       label: "Terima pesanan pertama",
       done: orders.some((o) => o.status === "paid" || o.status === "delivered"),
-      href: "/admin/orders",
+      href: "/rabsodi/orders",
     },
   ];
 

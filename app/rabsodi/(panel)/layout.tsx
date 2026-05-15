@@ -19,7 +19,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   // (fetch session dari /api/auth/session bisa 200ms+).
   useEffect(() => {
     if (hydrated && !authed) {
-      router.replace("/admin/login");
+      router.replace("/rabsodi/login");
     }
   }, [hydrated, authed, router]);
 
@@ -51,17 +51,17 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   }
 
   const commands: CommandItem[] = [
-    { icon: "📊", title: "Dashboard", section: "Halaman", onRun: () => router.push("/admin"), keywords: "beranda overview" },
-    { icon: "📦", title: "Produk", section: "Halaman", onRun: () => router.push("/admin/products") },
-    { icon: "🧾", title: "Pesanan", section: "Halaman", onRun: () => router.push("/admin/orders"), keywords: "order transaksi" },
-    { icon: "🔐", title: "Stok akun", section: "Halaman", onRun: () => router.push("/admin/stock"), keywords: "kredensial credential" },
-    { icon: "👥", title: "Member", section: "Halaman", onRun: () => router.push("/admin/users"), keywords: "user pelanggan" },
-    { icon: "🎟️", title: "Voucher", section: "Halaman", onRun: () => router.push("/admin/vouchers"), keywords: "diskon promo" },
-    { icon: "💳", title: "Payment Gateway", section: "Halaman", onRun: () => router.push("/admin/gateways"), keywords: "pembayaran" },
-    { icon: "📋", title: "Audit log", section: "Halaman", onRun: () => router.push("/admin/audit"), keywords: "aktivitas history" },
-    { icon: "⚙️", title: "Settings", section: "Halaman", onRun: () => router.push("/admin/settings"), keywords: "pengaturan toko" },
+    { icon: "📊", title: "Dashboard", section: "Halaman", onRun: () => router.push("/rabsodi"), keywords: "beranda overview" },
+    { icon: "📦", title: "Produk", section: "Halaman", onRun: () => router.push("/rabsodi/products") },
+    { icon: "🧾", title: "Pesanan", section: "Halaman", onRun: () => router.push("/rabsodi/orders"), keywords: "order transaksi" },
+    { icon: "🔐", title: "Stok akun", section: "Halaman", onRun: () => router.push("/rabsodi/stock"), keywords: "kredensial credential" },
+    { icon: "👥", title: "Member", section: "Halaman", onRun: () => router.push("/rabsodi/users"), keywords: "user pelanggan" },
+    { icon: "🎟️", title: "Voucher", section: "Halaman", onRun: () => router.push("/rabsodi/vouchers"), keywords: "diskon promo" },
+    { icon: "💳", title: "Payment Gateway", section: "Halaman", onRun: () => router.push("/rabsodi/gateways"), keywords: "pembayaran" },
+    { icon: "📋", title: "Audit log", section: "Halaman", onRun: () => router.push("/rabsodi/audit"), keywords: "aktivitas history" },
+    { icon: "⚙️", title: "Settings", section: "Halaman", onRun: () => router.push("/rabsodi/settings"), keywords: "pengaturan toko" },
     { icon: "🏠", title: "Lihat toko (frontend)", section: "Navigasi", onRun: () => router.push("/") },
-    { icon: "🚪", title: "Logout", section: "Akun", onRun: () => { logout(); router.push("/admin/login"); } },
+    { icon: "🚪", title: "Logout", section: "Akun", onRun: () => { logout(); router.push("/rabsodi/login"); } },
   ];
 
   return (

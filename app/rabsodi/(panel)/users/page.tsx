@@ -112,7 +112,7 @@ export default function AdminUsersPage() {
         rows={paged.items.map((u) => [
           <Link
             key="n"
-            href={`/admin/users/${u.id}`}
+            href={`/rabsodi/users/${u.id}`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -163,7 +163,7 @@ export default function AdminUsersPage() {
           <StatusPill key="st" status={u.status} />,
           <div key="a" style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <Link
-              href={`/admin/users/${u.id}`}
+              href={`/rabsodi/users/${u.id}`}
               style={{ ...miniBtn, textDecoration: "none" }}
             >
               Detail

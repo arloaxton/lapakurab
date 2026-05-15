@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (authed) router.replace("/admin");
+    if (authed) router.replace("/rabsodi");
   }, [authed, router]);
 
   const submit = async (e: React.FormEvent) => {
@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       // Mock mode (legacy demo): password 'admin123' atau 'demo'
       if (pw === "admin123" || pw === "demo") {
         login();
-        router.replace("/admin");
+        router.replace("/rabsodi");
       } else {
         setErr('Email atau password salah. (Demo: password = "admin123")');
       }
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
         return;
       }
       login();
-      router.replace("/admin");
+      router.replace("/rabsodi");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Login gagal");
     } finally {

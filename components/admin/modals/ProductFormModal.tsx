@@ -230,7 +230,7 @@ export function ProductFormModal({ product, onClose, onSave }: ProductFormModalP
             >
               Belum ada kategori. Tambah dulu di{" "}
               <a
-                href="/admin/categories"
+                href="/rabsodi/categories"
                 style={{ color: "var(--primary)", fontWeight: 600, marginLeft: 4 }}
               >
                 /admin/categories

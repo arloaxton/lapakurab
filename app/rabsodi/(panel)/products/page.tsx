@@ -230,7 +230,7 @@ export default function AdminProductsPage() {
         rows={paged.items.map((p) => [
           <Link
             key="n"
-            href={`/admin/products/${p.id}`}
+            href={`/rabsodi/products/${p.id}`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -303,7 +303,7 @@ export default function AdminProductsPage() {
           <StatusPill key="st" status={p.active ? "active" : "inactive"} />,
           <div key="a" style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <Link
-              href={`/admin/products/${p.id}`}
+              href={`/rabsodi/products/${p.id}`}
               style={{ ...miniBtn, textDecoration: "none" }}
             >
               Detail

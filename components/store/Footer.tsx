@@ -75,7 +75,6 @@ export function Footer() {
           h: "Tentang",
           l: [
             { label: "Tentang kami", href: "/about" },
-            { label: "Login admin", href: "/admin/login" },
           ],
         },
       ].map((c) => (

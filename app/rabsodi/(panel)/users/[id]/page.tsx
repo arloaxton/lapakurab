@@ -53,7 +53,7 @@ export default function AdminUserDetailPage({
     return (
       <div>
         <PageHeader title="Member tidak ditemukan" />
-        <Link href="/admin/users" style={{ ...primaryBtn, textDecoration: "none" }}>
+        <Link href="/rabsodi/users" style={{ ...primaryBtn, textDecoration: "none" }}>
           ← Kembali
         </Link>
       </div>
@@ -131,7 +131,7 @@ export default function AdminUserDetailPage({
   return (
     <div>
       <Link
-        href="/admin/users"
+        href="/rabsodi/users"
         style={{ ...secondaryBtn, marginBottom: 12, fontSize: 12, textDecoration: "none", display: "inline-block" }}
       >
         ← Kembali ke member

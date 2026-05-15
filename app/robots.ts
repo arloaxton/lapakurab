@@ -9,9 +9,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
+        // NB: jangan list path admin di sini — robots.txt public, malah
+        // expose lokasi panel. Pakai meta noindex per-page (sudah di-set
+        // di layout/login metadata).
         disallow: [
-          "/admin",
-          "/admin/",
           "/api/",
           "/cart",
           "/checkout",

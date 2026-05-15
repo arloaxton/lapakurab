@@ -28,7 +28,7 @@ export default function AdminProductDetailPage({
     return (
       <div>
         <PageHeader title="Produk tidak ditemukan" />
-        <Link href="/admin/products" style={{ ...primaryBtn, textDecoration: "none" }}>
+        <Link href="/rabsodi/products" style={{ ...primaryBtn, textDecoration: "none" }}>
           ← Kembali
         </Link>
       </div>
@@ -47,7 +47,7 @@ export default function AdminProductDetailPage({
   return (
     <div>
       <Link
-        href="/admin/products"
+        href="/rabsodi/products"
         style={{
           ...secondaryBtn,
           marginBottom: 12,

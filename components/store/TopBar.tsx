@@ -593,14 +593,14 @@ export function TopBar() {
             href={
               user
                 ? user.role === "admin"
-                  ? "/admin"
+                  ? "/rabsodi"
                   : "/dashboard"
                 : "/login"
             }
             active={
               pathname === "/dashboard" ||
               pathname === "/login" ||
-              pathname.startsWith("/admin")
+              pathname.startsWith("/rabsodi")
             }
           >
             {user ? user.name.split(" ")[0] : "Masuk"}
