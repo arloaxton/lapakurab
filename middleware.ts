@@ -18,7 +18,7 @@ import { createServerClient } from "@supabase/ssr";
 // Path yang TIDAK dilindungi CSRF (webhook external, cron protected via
 // CRON_SECRET header — bukan CSRF concern).
 const CSRF_EXEMPT_PREFIXES = [
-  "/api/payments/tokopay/callback",
+  "/api/payments/pakasir/callback",
   "/api/cron/",
 ];
 

@@ -1,26 +1,22 @@
 /**
- * Checkout orchestrator — bridge antara cart, orders, dan Tokopay.
+ * Checkout orchestrator — bridge antara cart, orders, dan Pakasir.
  *
  * Flow:
- *   1. Authenticated user POST /api/checkout dengan cart items + payment channel
- *      + optional voucherCode.
- *   2. Server VALIDATE voucher (anti tamper — tidak trust client). Hitung
- *      discount + admin fee dari settings.
+ *   1. Authenticated user POST /api/checkout dengan cart items + voucherCode.
+ *   2. Server VALIDATE voucher (anti tamper). Hitung discount + admin fee.
  *   3. Server insert N orders (status=pending) dengan shared payment_ref.
- *      Discount + admin fee disimpan di FIRST order saja (others 0).
- *   4. Server panggil Tokopay createOrder dengan total = subtotal − discount +
- *      adminFee. INI total yang di-charge customer.
- *   5. Server attach payment_ref/url/trx_id ke semua order + redeem voucher.
- *   6. Return ke client: pay_url, qr_string, payment_ref, breakdown.
- *   7. Client redirect ke pay_url.
- *   8. Tokopay kirim webhook → /api/payments/tokopay/callback → settlePaymentRef
+ *   4. Server panggil Pakasir createTransaction(qris) dengan total final.
+ *   5. Server attach payment_ref/url/qr_string ke semua order + redeem voucher.
+ *   6. Return ke client: payUrl, qrString, paymentRef, breakdown.
+ *   7. Client tampilkan QR + polling status.
+ *   8. Pakasir kirim webhook → /api/payments/pakasir/callback → settlePaymentRef
  */
 
 import { createPendingOrder, attachPaymentToOrders } from "@/lib/data/orders-repo";
 import { findVoucherByCode, redeemVoucher } from "@/lib/data/vouchers-repo";
 import { getSettings } from "@/lib/data/settings-repo";
-import { createTokopayOrder, type TokopayChannel } from "./payments/tokopay";
-import { env, isTokopayConfigured } from "../env";
+import { createPakasirTransaction } from "./payments/pakasir";
+import { env, isPakasirConfigured } from "../env";
 import { getCurrentSession } from "./auth";
 import type { CheckoutInput } from "../schemas/checkout";
 import type { Voucher } from "@/lib/types";
@@ -55,9 +51,9 @@ function computeDiscount(voucher: Voucher, subtotal: number): number {
 }
 
 export async function checkoutService(input: CheckoutInput): Promise<CheckoutResult> {
-  if (!isTokopayConfigured()) {
+  if (!isPakasirConfigured()) {
     throw new Error(
-      "Payment gateway belum di-konfigurasi. Set TOKOPAY_MERCHANT_ID + TOKOPAY_SECRET di .env."
+      "Payment gateway belum di-konfigurasi. Set PAKASIR_API_KEY + PAKASIR_PROJECT di .env."
     );
   }
   const sess = await getCurrentSession();
@@ -100,7 +96,7 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
   const settings = await getSettings();
   const adminFee = settings.adminFeeIDR ?? 0;
 
-  // ─── 4. Total final yang di-charge ke customer via Tokopay ──────────────
+  // ─── 4. Total final yang di-charge ke customer via Pakasir ──────────────
   const totalAmount = Math.max(0, subtotal - discount + adminFee);
   if (totalAmount <= 0) throw new Error("Total akhir tidak valid");
 
@@ -143,26 +139,16 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     }
   }
 
-  // ─── 6. Call Tokopay create-order dengan total final ───────────────────
-  let tokopayData;
+  // ─── 6. Call Pakasir create-transaction (QRIS) dengan total final ─────
+  let pakasirData;
   try {
     const redirectUrl = env.SITE_URL
       ? `${env.SITE_URL}/checkout/success?ref=${paymentRef}`
-      : "";
-    tokopayData = await createTokopayOrder({
-      channel: input.paymentChannel as TokopayChannel,
-      reffId: paymentRef,
+      : undefined;
+    pakasirData = await createPakasirTransaction({
+      orderId: paymentRef,
       amount: totalAmount,
-      customerName: input.customerName,
-      customerEmail: input.customerEmail,
-      customerPhone: input.customerPhone,
       redirectUrl,
-      items: input.items.map((it) => ({
-        product_code: it.productId,
-        name: `${it.productName} · ${it.duration}`,
-        price: it.unitPriceIDR,
-        qty: it.qty,
-      })),
     });
   } catch (e) {
     // Cleanup: orders sudah ke-insert tapi gateway gagal. Tandai 'failed'.
@@ -172,10 +158,15 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     throw e;
   }
 
-  const payUrl = tokopayData.pay_url ?? "";
-  const qrString = tokopayData.qr_string ?? null;
-  const qrLink = tokopayData.qr_link ?? null;
-  const trxId = tokopayData.trx_id ?? null;
+  // Pakasir return payment_number = QR string. Tidak ada pay_url terpisah
+  // — client render QR sendiri. Untuk fallback, sediakan link "pay page"
+  // Pakasir kalau client butuh.
+  const qrString = pakasirData.payment_number;
+  const qrLink: string | null = null;
+  const payUrl = `${env.PAKASIR_BASE_URL}/pay/${env.PAKASIR_PROJECT}/${totalAmount}?order_id=${encodeURIComponent(paymentRef)}&qris_only=1${
+    env.SITE_URL ? `&redirect=${encodeURIComponent(env.SITE_URL + "/checkout/success?ref=" + paymentRef)}` : ""
+  }`;
+  const trxId: string | null = null;
 
   // ─── 7. Attach payment metadata + redeem voucher ───────────────────────
   await attachPaymentToOrders(orderIds, paymentRef, payUrl, trxId, qrString);

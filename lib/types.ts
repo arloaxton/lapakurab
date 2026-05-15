@@ -54,8 +54,6 @@ export interface PaymentMethod {
   name: string;
   desc: string;
   tag: string | null;
-  /** Tokopay channel code (Phase 4). Untuk QRIS realtime + e-wallet. */
-  tokopayChannel?: string;
 }
 
 // Order yang ditampilkan di dashboard pelanggan

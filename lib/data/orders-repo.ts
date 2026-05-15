@@ -31,7 +31,7 @@ export interface OrderRow {
   payment_method: string | null;
   payment_ref: string | null;
   payment_url: string | null;
-  tokopay_trx_id: string | null;
+  payment_trx_id: string | null;
   qr_string: string | null;
   notes: string | null;
   delivered_at: string | null;
@@ -234,7 +234,7 @@ export async function updateOrder(id: string, patch: UpdateOrderInput): Promise<
 
 // ─── Delete ─────────────────────────────────────────────────────────────
 
-// ─── Pending-create (Phase 4 — Tokopay) ─────────────────────────────────
+// ─── Pending-create (Phase 4 — Pakasir) ─────────────────────────────────
 
 /**
  * Create order dengan status='pending' tanpa auto-deliver. Stock akan
@@ -276,7 +276,7 @@ export async function attachPaymentToOrders(
   orderIds: string[],
   paymentRef: string,
   paymentUrl: string,
-  tokopayTrxId: string | null,
+  paymentTrxId: string | null,
   qrString: string | null
 ): Promise<void> {
   if (!isSupabaseConfigured() || orderIds.length === 0) return;
@@ -287,7 +287,7 @@ export async function attachPaymentToOrders(
     .update({
       payment_ref: paymentRef,
       payment_url: paymentUrl,
-      tokopay_trx_id: tokopayTrxId,
+      payment_trx_id: paymentTrxId,
       qr_string: qrString,
     })
     .in("id", orderIds);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured, isTokopayConfigured } from "@/backend/env";
+import { isSupabaseConfigured, isPakasirConfigured } from "@/backend/env";
 import { checkoutSchema } from "@/backend/schemas/checkout";
 import { checkoutService } from "@/backend/services/checkout";
 import { enforceRateLimit } from "@/backend/services/security";
@@ -9,9 +9,9 @@ export async function POST(req: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "Backend belum di-konfigurasi" }, { status: 503 });
   }
-  if (!isTokopayConfigured()) {
+  if (!isPakasirConfigured()) {
     return NextResponse.json(
-      { error: "Payment gateway belum di-konfigurasi (TOKOPAY_*)." },
+      { error: "Payment gateway belum di-konfigurasi (PAKASIR_*)." },
       { status: 503 }
     );
   }

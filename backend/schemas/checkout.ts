@@ -1,19 +1,13 @@
 import { z } from "zod";
 
-const TOKOPAY_CHANNEL = [
-  "QRISREALTIME",
-  "QRIS_REALTIME_NOBU",
-  "GOPAY",
-  "DANA",
-  "SHOPEEPAY",
-  "LINKAJA",
-] as const;
+// Pakasir cuma support QRIS — channel ditetap statis.
+const PAKASIR_CHANNEL = ["qris"] as const;
 
 export const checkoutSchema = z.object({
   customerName: z.string().trim().min(1).max(120),
   customerEmail: z.string().trim().toLowerCase().email("Email tidak valid"),
   customerPhone: z.string().trim().min(8).max(40),
-  paymentChannel: z.enum(TOKOPAY_CHANNEL),
+  paymentChannel: z.enum(PAKASIR_CHANNEL).optional().default("qris"),
   voucherCode: z.string().trim().toUpperCase().max(40).optional().nullable(),
   items: z
     .array(

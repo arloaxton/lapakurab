@@ -141,13 +141,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Supabase + Tokopay mode: POST /api/checkout, redirect ke pay_url.
+    // Supabase + Pakasir mode: POST /api/checkout, redirect ke pay_url.
     try {
-      const methodMeta = PAYMENT_METHODS.find((p) => p.id === method);
-      const channel = methodMeta?.tokopayChannel;
-      if (!channel) {
-        throw new Error("Metode pembayaran tidak terhubung ke gateway.");
-      }
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -155,7 +150,7 @@ export default function CheckoutPage() {
           customerName: user?.name ?? values.email.split("@")[0],
           customerEmail: values.email,
           customerPhone: values.phone,
-          paymentChannel: channel,
+          paymentChannel: "qris",
           voucherCode: appliedVoucher?.code ?? null,
           items: cart.map((line) => ({
             productId: line.product.id,
@@ -180,11 +175,11 @@ export default function CheckoutPage() {
       }
       // Voucher.used sudah di-increment server-side di /api/checkout
       clearCart();
-      // Redirect ke Tokopay (hosted payment page / e-wallet deeplink).
-      // Sukses → Tokopay redirect ke /checkout/success?ref=PAYMENT_REF
+      // Redirect ke Pakasir hosted payment page (QRIS).
+      // Sukses → Pakasir redirect balik ke /checkout/success?ref=PAYMENT_REF
       window.location.href = data.payUrl;
     } catch (e) {
-      // Fallback: legacy flow create order langsung. Disable kalau Tokopay
+      // Fallback: legacy flow create order langsung. Disable kalau Pakasir
       // belum di-konfig di server (server return 503).
       const msg = e instanceof Error ? e.message : "Pembayaran gagal";
       // Kalau gateway belum di-konfig, fallback ke flow lama (mark paid langsung).

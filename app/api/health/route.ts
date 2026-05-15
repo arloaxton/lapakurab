@@ -13,11 +13,10 @@
 import { NextResponse } from "next/server";
 import {
   isSupabaseConfigured,
-  isTokopayConfigured,
+  isPakasirConfigured,
   isRateLimiterConfigured,
   isEmailConfigured,
   isSentryConfigured,
-  isTokopayIpWhitelistEnforced,
 } from "@/backend/env";
 import { getAdminClient } from "@/backend/db/server-client";
 
@@ -31,11 +30,10 @@ interface HealthStatus {
   checks: {
     server: "ok";
     supabase: "ok" | "down" | "skipped";
-    tokopay: "configured" | "skipped";
+    pakasir: "configured" | "skipped";
     rateLimit: "configured" | "skipped";
     email: "configured" | "skipped";
     sentry: "configured" | "skipped";
-    tokopayIpWhitelist: "enforced" | "skipped";
   };
   version?: string;
 }
@@ -46,11 +44,10 @@ export async function GET() {
   const checks: HealthStatus["checks"] = {
     server: "ok",
     supabase: "skipped",
-    tokopay: isTokopayConfigured() ? "configured" : "skipped",
+    pakasir: isPakasirConfigured() ? "configured" : "skipped",
     rateLimit: isRateLimiterConfigured() ? "configured" : "skipped",
     email: isEmailConfigured() ? "configured" : "skipped",
     sentry: isSentryConfigured() ? "configured" : "skipped",
-    tokopayIpWhitelist: isTokopayIpWhitelistEnforced() ? "enforced" : "skipped",
   };
 
   let status: HealthStatus["status"] = "ok";

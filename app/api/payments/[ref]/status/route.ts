@@ -3,18 +3,18 @@
  *
  * Authenticated user pemilik order (RLS otomatis filter user_id).
  * Return: status global ('pending' | 'paid' | 'delivered' | 'refunded' | 'failed')
- * dan list order ringkas. Optional: re-sync via Tokopay status check kalau
+ * dan list order ringkas. Optional: re-sync via Pakasir status check kalau
  * stuck pending lebih dari X menit.
  */
 
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured, isTokopayConfigured } from "@/backend/env";
+import { isSupabaseConfigured, isPakasirConfigured } from "@/backend/env";
 import { getCurrentSession } from "@/backend/services/auth";
 import {
   findOrdersByPaymentRef,
   settlePaymentRef,
 } from "@/lib/data/orders-repo";
-import { checkTokopayStatus } from "@/backend/services/payments/tokopay";
+import { checkPakasirStatus } from "@/backend/services/payments/pakasir";
 
 interface Ctx {
   params: Promise<{ ref: string }>;
@@ -42,13 +42,18 @@ export async function GET(req: Request, { params }: Ctx) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Auto-resync: kalau ada poll-side dan masih pending, cek Tokopay langsung.
+    // Auto-resync: kalau ada poll-side dan masih pending, cek Pakasir langsung.
     const url = new URL(req.url);
     const wantSync = url.searchParams.get("sync") === "1";
-    if (wantSync && orders.some((o) => o.status === "pending") && isTokopayConfigured()) {
+    if (wantSync && orders.some((o) => o.status === "pending") && isPakasirConfigured()) {
       try {
-        const tk = await checkTokopayStatus(ref);
-        if (tk.status === "Success" || tk.status === "Completed") {
+        // Total amount untuk re-verify: ambil dari order pertama.total_idr
+        // (semua order di payment_ref ini share total Pakasir = total order pertama
+        // + biaya extra; tapi createTransaction pakai totalAmount=subtotal-disc+fee).
+        // Idealnya pakai total_idr semua order yang sama dengan amount Pakasir.
+        const totalAmount = orders.reduce((s, o) => s + o.total_idr, 0);
+        const tk = await checkPakasirStatus(ref, totalAmount);
+        if (tk.status?.toLowerCase() === "completed") {
           await settlePaymentRef(ref);
         }
       } catch {

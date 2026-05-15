@@ -24,7 +24,7 @@ function CheckoutSuccessInner() {
   const [error, setError] = useState<string | null>(null);
   const pollCount = useRef(0);
 
-  // Poll status kalau ada ?ref=PAYMENT_REF (Tokopay flow).
+  // Poll status kalau ada ?ref=PAYMENT_REF (Pakasir flow).
   useEffect(() => {
     if (!ref) return;
     let cancelled = false;
@@ -32,7 +32,7 @@ function CheckoutSuccessInner() {
 
     const poll = async () => {
       pollCount.current += 1;
-      // Sync dengan Tokopay setiap 3rd poll (~9s) untuk fallback kalau
+      // Sync dengan Pakasir setiap 3rd poll (~9s) untuk fallback kalau
       // webhook delayed.
       const syncQuery = pollCount.current % 3 === 0 ? "?sync=1" : "";
       try {

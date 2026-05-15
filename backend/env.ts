@@ -20,17 +20,12 @@ const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
 const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "";
 
-// Tokopay (Phase 4) — server-only
-const TOKOPAY_MERCHANT_ID = process.env.TOKOPAY_MERCHANT_ID?.trim() || "";
-const TOKOPAY_SECRET = process.env.TOKOPAY_SECRET?.trim() || "";
-const TOKOPAY_BASE_URL =
-  process.env.TOKOPAY_BASE_URL?.trim() || "https://api.tokopay.id/v1";
-// Webhook IP whitelist (comma-separated). Kosong = skip (dev only).
-const TOKOPAY_IP_WHITELIST_RAW =
-  process.env.TOKOPAY_IP_WHITELIST?.trim() || "";
-const TOKOPAY_IP_WHITELIST = TOKOPAY_IP_WHITELIST_RAW
-  ? TOKOPAY_IP_WHITELIST_RAW.split(",").map((s) => s.trim()).filter(Boolean)
-  : [];
+// Pakasir payment gateway — server-only
+// API key & project slug dari dashboard https://app.pakasir.com
+const PAKASIR_API_KEY = process.env.PAKASIR_API_KEY?.trim() || "";
+const PAKASIR_PROJECT = process.env.PAKASIR_PROJECT?.trim() || "";
+const PAKASIR_BASE_URL =
+  process.env.PAKASIR_BASE_URL?.trim() || "https://app.pakasir.com";
 
 // Email — dual mode: SMTP (Postfix VPS) atau Resend HTTP API
 // SMTP prioritas pertama kalau SMTP_HOST di-set; fallback ke Resend kalau
@@ -68,10 +63,9 @@ export const env = {
   SUPABASE_ANON_KEY: ANON_KEY,
   SUPABASE_SERVICE_ROLE: SERVICE_ROLE,
   SITE_URL,
-  TOKOPAY_MERCHANT_ID,
-  TOKOPAY_SECRET,
-  TOKOPAY_BASE_URL,
-  TOKOPAY_IP_WHITELIST,
+  PAKASIR_API_KEY,
+  PAKASIR_PROJECT,
+  PAKASIR_BASE_URL,
   RESEND_API_KEY,
   EMAIL_FROM,
   SMTP_HOST,
@@ -97,12 +91,8 @@ export function isProduction(): boolean {
   return NODE_ENV === "production";
 }
 
-export function isTokopayConfigured(): boolean {
-  return Boolean(TOKOPAY_MERCHANT_ID && TOKOPAY_SECRET);
-}
-
-export function isTokopayIpWhitelistEnforced(): boolean {
-  return TOKOPAY_IP_WHITELIST.length > 0;
+export function isPakasirConfigured(): boolean {
+  return Boolean(PAKASIR_API_KEY && PAKASIR_PROJECT);
 }
 
 export function isSmtpConfigured(): boolean {
@@ -169,12 +159,8 @@ export function assertProductionReady(): void {
   if (!CRON_SECRET) missing.push("CRON_SECRET");
   if (!SITE_URL) missing.push("NEXT_PUBLIC_SITE_URL");
 
-  // Wajib kalau Tokopay configured
-  if (isTokopayConfigured()) {
-    if (TOKOPAY_IP_WHITELIST.length === 0) {
-      missing.push("TOKOPAY_IP_WHITELIST (Tokopay aktif tapi whitelist kosong)");
-    }
-  }
+  // Pakasir tidak ada whitelist publish — webhook verify via re-check
+  // ke /transactiondetail. Tidak ada validation tambahan di sini.
 
   // Highly recommended (warning saja)
   if (!isRateLimiterConfigured()) {

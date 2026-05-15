@@ -23,7 +23,7 @@ export class OriginMismatchError extends Error {
  * Pakai di state-changing endpoints (POST/PATCH/DELETE). GET endpoints
  * tidak perlu — browser tidak attach Origin untuk same-origin GET.
  *
- * NB: Webhook external (Tokopay callback) JANGAN pakai ini.
+ * NB: Webhook external (Pakasir callback) JANGAN pakai ini.
  */
 export function assertSameOrigin(req: Request): void {
   const origin = req.headers.get("origin");
