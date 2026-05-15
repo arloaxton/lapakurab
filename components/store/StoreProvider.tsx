@@ -9,8 +9,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Currency, Product, StoreUser, Voucher } from "@/lib/types";
-import { fmtIDR, fmtUSD } from "@/lib/format";
+import type { Product, StoreUser, Voucher } from "@/lib/types";
+import { fmtIDR } from "@/lib/format";
 import { PRODUCTS } from "@/lib/mock";
 import { validateVoucherCode } from "@/lib/data/vouchers-client";
 import { getCurrentUser, signOut as authSignOut } from "@/lib/data/auth-repo";
@@ -57,15 +57,8 @@ export interface StoreApi {
   user: StoreUser | null;
   setUser: (u: StoreUser | null) => void;
 
-  // currency
-  currency: Currency;
-  setCurrency: (c: Currency) => void;
-  toggleCurrency: () => void;
+  // formatter (selalu IDR)
   fmt: (n: number) => string;
-
-  // dark mode (storefront)
-  darkMode: boolean;
-  toggleDark: () => void;
 
   // toast (cart specific — bubble bawah)
   cartToast: CartToastState | null;
@@ -102,21 +95,17 @@ export const useStore = (): StoreApi => {
 const LS_CART = "lapakurab_cart_v1";
 const LS_USER = "lapakurab_user_v1";
 const LS_COMPARE = "lapakurab_compare_v1";
-const LS_CURRENCY = "lapakurab_currency_v1";
-const LS_DARK = "lapakurab_dark_v1";
 
 // ─── Provider ───────────────────────────────────────────────────────────────
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [user, setUser] = useState<StoreUser | null>(null);
-  const [currency, setCurrency] = useState<Currency>("IDR");
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [cartToast, setCartToast] = useState<CartToastState | null>(null);
   const [flyAnim, setFlyAnim] = useState<FlyAnim | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate from localStorage (client only).
@@ -151,10 +140,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       const cmp = localStorage.getItem(LS_COMPARE);
       if (cmp) setCompareIds(JSON.parse(cmp));
-      const cur = localStorage.getItem(LS_CURRENCY);
-      if (cur === "IDR" || cur === "USD") setCurrency(cur);
-      const d = localStorage.getItem(LS_DARK);
-      if (d === "1") setDarkMode(true);
     } catch {
       /* ignore */
     }
@@ -227,28 +212,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
   }, [compareIds, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(LS_CURRENCY, currency);
-    } catch {
-      /* ignore */
-    }
-  }, [currency, hydrated]);
-
-  // Persist + apply dark mode by toggling data-theme on <html>
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(LS_DARK, darkMode ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-    if (typeof document !== "undefined") {
-      document.documentElement.dataset.theme = darkMode ? "dark" : "light";
-    }
-  }, [darkMode, hydrated]);
 
   // ─── Cart actions ─────────────────────────────────────────────────────────
   const addToCart = useCallback(
@@ -383,10 +346,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [compareIds]
   );
 
-  const fmt = currency === "USD" ? fmtUSD : fmtIDR;
-
-  const toggleCurrency = useCallback(() => setCurrency((c) => (c === "IDR" ? "USD" : "IDR")), []);
-  const toggleDark = useCallback(() => setDarkMode((d) => !d), []);
+  const fmt = fmtIDR;
 
   // Wrap setUser: kalau di Supabase mode dan user di-set ke null, panggil
   // signOut Supabase juga (clear cookie session di server).
@@ -402,8 +362,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value: StoreApi = {
     cart, cartTotal, cartCount, addToCart, removeFromCart, updateQty, clearCart,
     user, setUser: setUserWrapped,
-    currency, setCurrency, toggleCurrency, fmt,
-    darkMode, toggleDark,
+    fmt,
     cartToast, setCartToast,
     flyAnim, setFlyAnim,
     compareIds, compareList, toggleCompare, clearCompare, compareOpen, setCompareOpen,

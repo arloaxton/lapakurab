@@ -44,7 +44,7 @@ function isActive(pathname: string, href: string): boolean {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { logout, resetData, notifications, markNotifRead, markAllNotifsRead, darkMode, toggleDark } = useAdmin();
+  const { logout, resetData, notifications, markNotifRead, markAllNotifsRead } = useAdmin();
   const confirm = useConfirm();
   const toast = useToast();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -436,55 +436,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </svg>
               Lihat toko
             </Link>
-            <button
-              onClick={toggleDark}
-              title={darkMode ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
-              aria-label={darkMode ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink)",
-                transition: "background 0.15s, border-color 0.15s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface)")}
-            >
-              {darkMode ? (
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-                </svg>
-              ) : (
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
-            </button>
             <div data-notif-bell style={{ position: "relative" }}>
               <button
                 onClick={(e) => {

@@ -85,7 +85,6 @@ export interface StoreUser {
   role?: "user" | "admin";
 }
 
-export type Currency = "IDR" | "USD";
 export type FontKey = "groovy" | "editorial" | "clean";
 
 // ─── Admin ──────────────────────────────────────────────────────────────────

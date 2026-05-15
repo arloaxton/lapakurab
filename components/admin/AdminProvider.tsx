@@ -36,7 +36,6 @@ import {
 
 const LS_KEY = "lapakurab_admin_v1";
 const SESSION_KEY = "lapakurab_admin_session";
-const DARK_KEY = "lapakurab_admin_dark";
 
 const SEED: AdminState = {
   products: SEED_PRODUCTS,
@@ -94,9 +93,6 @@ interface AdminApi extends AdminState {
   login: () => void;
   logout: () => void;
 
-  darkMode: boolean;
-  toggleDark: () => void;
-
   updateProducts: (fn: Updater<Product[]>) => void;
   updateOrders: (fn: Updater<AdminOrder[]>) => void;
   updateStock: (fn: Updater<StockItem[]>) => void;
@@ -124,14 +120,12 @@ export const useAdmin = (): AdminApi => {
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [data, setData] = useState<AdminState>(SEED);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate from localStorage / sessionStorage
   useEffect(() => {
     setData(loadState());
-    setDarkMode(localStorage.getItem(DARK_KEY) === "1");
 
     // Auth: di Supabase mode, cek session di server lewat /api/auth/session.
     // Mock mode: pakai sessionStorage flag legacy.
@@ -302,16 +296,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     saveState(data);
   }, [data, hydrated]);
-
-  // Persist dark mode
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(DARK_KEY, darkMode ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  }, [darkMode, hydrated]);
 
   // Auto-pause produk yang stoknya 0 (kalau setting aktif).
   // SINGLE setData call (batch products + notifications) untuk hindari
@@ -517,16 +501,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const toggleDark = useCallback(() => setDarkMode((d) => !d), []);
-
   const api: AdminApi = {
     ...data,
     authed,
     hydrated,
     login,
     logout,
-    darkMode,
-    toggleDark,
     updateProducts,
     updateOrders,
     updateStock,

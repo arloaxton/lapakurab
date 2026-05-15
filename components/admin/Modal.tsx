@@ -2,7 +2,6 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useModalKey } from "@/hooks/useModalKey";
-import { useAdmin } from "./AdminProvider";
 import { getAdminTheme } from "@/lib/theme";
 
 // CSS custom properties tidak ada di CSSProperties bawaan React.
@@ -43,9 +42,8 @@ export function Modal({
   children,
   footer,
 }: ModalProps) {
-  const { darkMode } = useAdmin();
   useModalKey(true, onClose);
-  const theme = getAdminTheme(darkMode) as CSSVars;
+  const theme = getAdminTheme(false) as CSSVars;
 
   return (
     <div style={modalBg} onClick={onClose}>

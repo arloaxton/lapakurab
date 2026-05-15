@@ -1,12 +1,5 @@
-import type { Currency } from "./types";
-
 export const fmtIDR = (n: number): string =>
   "Rp" + (n || 0).toLocaleString("id-ID");
-
-export const fmtUSD = (n: number): string => "$" + (n / 15500).toFixed(2);
-
-export const fmtPrice = (n: number, currency: Currency = "IDR"): string =>
-  currency === "USD" ? fmtUSD(n) : fmtIDR(n);
 
 export const fmtDate = (s: string): string => {
   const d = new Date(s);

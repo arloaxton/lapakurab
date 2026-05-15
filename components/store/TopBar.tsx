@@ -16,7 +16,7 @@ const POPULAR_QUERIES = ["Netflix", "Spotify", "VPN", "Disney+", "YouTube"];
 export function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { cartCount, user, currency, toggleCurrency, darkMode, toggleDark } = useStore();
+  const { cartCount, user } = useStore();
 
   const [search, setSearch] = useState("");
   const [searchFocus, setSearchFocus] = useState(false);
@@ -511,81 +511,6 @@ export function TopBar() {
 
         {/* Nav */}
         <nav style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {/* Currency toggle */}
-          <button
-            type="button"
-            onClick={toggleCurrency}
-            title={`Mata uang: ${currency} — klik untuk ganti`}
-            aria-label={`Mata uang ${currency}, ganti`}
-            className="lk-icon-btn lk-hide-mobile"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              border: "1.5px solid var(--border)",
-              background: "var(--surface)",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              fontWeight: 700,
-              fontSize: 11,
-              color: "var(--ink-soft)",
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            {currency}
-          </button>
-          {/* Dark mode toggle */}
-          <button
-            type="button"
-            onClick={toggleDark}
-            title={darkMode ? "Mode terang" : "Mode gelap"}
-            aria-label={darkMode ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
-            className="lk-icon-btn"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              border: "1.5px solid var(--border)",
-              background: "var(--surface)",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--ink)",
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            {darkMode ? (
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-              </svg>
-            ) : (
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
           <NavBtn href="/catalog" active={pathname === "/catalog"}>
             Katalog
           </NavBtn>
