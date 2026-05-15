@@ -26,12 +26,22 @@ interface CheckoutResponse {
   orderIds: string[];
 }
 
+interface PaymentSessionItem {
+  productName: string;
+  duration: string;
+  qty: number;
+  unitPrice: number;
+  hue: number;
+  emoji: string;
+}
+
 interface PaymentSession {
   paymentRef: string;
   qrDataUrl: string;
   payUrl: string;
   expiresAt: string | null;
   totalAmount: number;
+  items: PaymentSessionItem[];
 }
 
 const ADMIN_FEE = 0;
@@ -151,20 +161,24 @@ export default function CheckoutPage() {
     return () => clearTimeout(t);
   }, []);
 
-  // Redirect to /cart if cart is empty (after hydration)
+  // Redirect to /cart if cart is empty (after hydration) — BUT skip kalau
+  // paySession aktif (user sudah klik Bayar → cart sudah di-clear, jangan
+  // bounce ke /cart).
   useEffect(() => {
     if (!hydrationDone) return;
+    if (paySession) return;
     if (cart.length === 0) router.replace("/cart");
-  }, [hydrationDone, cart.length, router]);
+  }, [hydrationDone, cart.length, router, paySession]);
 
   // Auth gate — must be logged in to checkout
   useEffect(() => {
     if (!hydrationDone) return;
+    if (paySession) return;
     if (cart.length > 0 && user === null) {
       toast.warn("Login dulu yuk", "Buat akun atau masuk untuk lanjut ke pembayaran.");
       router.replace("/login?next=/checkout");
     }
-  }, [hydrationDone, cart.length, user, router, toast]);
+  }, [hydrationDone, cart.length, user, router, toast, paySession]);
 
   // Sync form fields when user hydrates after mount
   useEffect(() => {
@@ -232,21 +246,39 @@ export default function CheckoutPage() {
           ("error" in data && data.error) || "Checkout gagal di gateway"
         );
       }
-      // Voucher.used sudah di-increment server-side di /api/checkout.
-      // Inline QR render: simpan session, client tampilkan QR + polling status.
-      // Kalau qrDataUrl gak ada (fallback), redirect ke Pakasir hosted page.
-      clearCart();
+      // Inline QR render: SET paySession DULU (sebelum clearCart) supaya
+      // cart-empty guard tidak redirect ke /cart saat cart di-clear.
+      // Snapshot cart items ke session supaya sidebar tetap tampil setelah
+      // cart kosong.
       if (data.qrDataUrl) {
+        const itemsSnapshot: PaymentSessionItem[] = cart.map((line) => {
+          const unit =
+            line.accountType === "sharing" && line.product.priceSharingIDR
+              ? line.product.priceSharingIDR
+              : line.product.priceIDR;
+          return {
+            productName: line.product.name,
+            duration: line.duration,
+            qty: line.qty,
+            unitPrice: unit,
+            hue: line.product.hue,
+            emoji: line.product.emoji,
+          };
+        });
         setPaySession({
           paymentRef: data.paymentRef,
           qrDataUrl: data.qrDataUrl,
           payUrl: data.payUrl,
           expiresAt: data.expiresAt,
           totalAmount: data.totalAmount,
+          items: itemsSnapshot,
         });
+        clearCart();
         setPaying(false);
         return;
       }
+      // Fallback: kalau gak ada QR, redirect ke Pakasir hosted page.
+      clearCart();
       window.location.href = data.payUrl;
     } catch (e) {
       // Fallback: legacy flow create order langsung. Disable kalau Pakasir
@@ -300,8 +332,10 @@ export default function CheckoutPage() {
     }
   };
 
-  // Tahan render sampai hydration & auth confirmed
-  if (!hydrationDone || cart.length === 0 || user === null) {
+  // Tahan render sampai hydration & auth confirmed.
+  // Kecuali: paySession aktif → cart sudah di-clear tapi user masih harus
+  // lihat QR — biarkan render.
+  if (!paySession && (!hydrationDone || cart.length === 0 || user === null)) {
     return (
       <div
         style={{
@@ -749,12 +783,37 @@ export default function CheckoutPage() {
               borderBottom: "1px dashed var(--border)",
             }}
           >
-            {cart.map((it) => (
+            {(paySession
+              ? paySession.items.map((it, i) => ({
+                  key: `s${i}`,
+                  hue: it.hue,
+                  emoji: it.emoji,
+                  name: it.productName,
+                  duration: it.duration,
+                  qty: it.qty,
+                  total: it.unitPrice * it.qty,
+                }))
+              : cart.map((it) => {
+                  const unit =
+                    it.accountType === "sharing" && it.product.priceSharingIDR
+                      ? it.product.priceSharingIDR
+                      : it.product.priceIDR;
+                  return {
+                    key: it.key,
+                    hue: it.product.hue,
+                    emoji: it.product.emoji,
+                    name: it.product.name,
+                    duration: it.duration,
+                    qty: it.qty,
+                    total: unit * it.qty,
+                  };
+                })
+            ).map((it) => (
               <div
                 key={it.key}
                 style={{ display: "flex", alignItems: "center", gap: 10 }}
               >
-                <ProductTile hue={it.product.hue} emoji={it.product.emoji} size={40} rounded={10} />
+                <ProductTile hue={it.hue} emoji={it.emoji} size={40} rounded={10} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -766,7 +825,7 @@ export default function CheckoutPage() {
                       color: "var(--ink)",
                     }}
                   >
-                    {it.product.name}
+                    {it.name}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>
                     {it.duration} × {it.qty}
@@ -775,7 +834,7 @@ export default function CheckoutPage() {
                 <div
                   style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}
                 >
-                  {fmt(it.product.priceIDR * it.qty)}
+                  {fmt(it.total)}
                 </div>
               </div>
             ))}
@@ -790,8 +849,15 @@ export default function CheckoutPage() {
               borderBottom: "1px dashed var(--border)",
             }}
           >
-            <Row label="Subtotal" value={fmt(cartTotal)} />
-            {appliedVoucher && (
+            <Row
+              label="Subtotal"
+              value={fmt(
+                paySession
+                  ? paySession.items.reduce((s, it) => s + it.unitPrice * it.qty, 0)
+                  : cartTotal
+              )}
+            />
+            {appliedVoucher && !paySession && (
               <Row
                 label={`Voucher · ${appliedVoucher.code}`}
                 value={"−" + fmt(voucherDiscount)}
@@ -799,7 +865,11 @@ export default function CheckoutPage() {
               />
             )}
           </div>
-          <Row label="Total" value={fmt(total)} bold />
+          <Row
+            label="Total"
+            value={fmt(paySession ? paySession.totalAmount : total)}
+            bold
+          />
         </aside>
       </div>
     </div>
