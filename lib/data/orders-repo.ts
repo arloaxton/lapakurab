@@ -62,7 +62,7 @@ function rowToCustomerOrder(r: OrderRow): CustomerOrder {
   else if (r.status === "delivered" && r.expires_at && new Date(r.expires_at) < new Date())
     status = "Selesai";
   else if (r.status === "delivered" || r.status === "paid") status = "Aktif";
-  else status = "Aktif";
+  else status = "Dibatalkan"; // pending falls here — defensif, listMyOrders filter sudah hide
 
   let daysLeft = 0;
   if (r.expires_at) {
@@ -130,9 +130,16 @@ export async function listMyOrders(opts: ListOrdersOpts = {}): Promise<CustomerO
   }
   const { getServerClient } = await import("@/backend/db/server-client");
   const sb = await getServerClient();
-  // RLS otomatis filter user_id = auth.uid()
+  // RLS otomatis filter user_id = auth.uid().
+  // Default: HIDE 'pending' (belum dibayar — user masih di checkout flow,
+  // jangan tampil seakan order valid) + 'failed' (gateway gagal).
+  // Kalau opts.status di-set, override.
   let q = sb.from("orders").select("*").order("created_at", { ascending: false });
-  if (opts.status) q = q.eq("status", opts.status);
+  if (opts.status) {
+    q = q.eq("status", opts.status);
+  } else {
+    q = q.in("status", ["paid", "delivered", "refunded"]);
+  }
   if (opts.limit) q = q.range(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit - 1);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
