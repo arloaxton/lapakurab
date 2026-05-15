@@ -25,8 +25,12 @@ export interface CheckoutResult {
   paymentRef: string;
   payUrl: string;
   qrString: string | null;
+  /** Data URL PNG dari QR code (base64). Ready to render <img src={qrDataUrl}>. */
+  qrDataUrl: string | null;
   qrLink: string | null;
   trxId: string | null;
+  /** Expired at ISO string dari Pakasir. */
+  expiresAt: string | null;
   subtotal: number;
   discount: number;
   adminFee: number;
@@ -158,15 +162,28 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     throw e;
   }
 
-  // Pakasir return payment_number = QR string. Tidak ada pay_url terpisah
-  // — client render QR sendiri. Untuk fallback, sediakan link "pay page"
-  // Pakasir kalau client butuh.
+  // Pakasir return payment_number = QR string. Generate PNG dataURL
+  // di server-side biar client tinggal render <img>.
   const qrString = pakasirData.payment_number;
+  let qrDataUrl: string | null = null;
+  try {
+    const { toDataURL } = await import("qrcode");
+    qrDataUrl = await toDataURL(qrString, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 320,
+      color: { dark: "#0F1419", light: "#FFFFFF" },
+    });
+  } catch (e) {
+    console.warn("[checkout] QR generation failed, fallback to qrString only:", e);
+  }
   const qrLink: string | null = null;
+  // Fallback URL ke Pakasir hosted page kalau QR render gagal.
   const payUrl = `${env.PAKASIR_BASE_URL}/pay/${env.PAKASIR_PROJECT}/${totalAmount}?order_id=${encodeURIComponent(paymentRef)}&qris_only=1${
     env.SITE_URL ? `&redirect=${encodeURIComponent(env.SITE_URL + "/checkout/success?ref=" + paymentRef)}` : ""
   }`;
   const trxId: string | null = null;
+  const expiresAt = pakasirData.expired_at ?? null;
 
   // ─── 7. Attach payment metadata + redeem voucher ───────────────────────
   await attachPaymentToOrders(orderIds, paymentRef, payUrl, trxId, qrString);
@@ -185,8 +202,10 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     paymentRef,
     payUrl,
     qrString,
+    qrDataUrl,
     qrLink,
     trxId,
+    expiresAt,
     subtotal,
     discount,
     adminFee,

@@ -18,10 +18,20 @@ interface CheckoutResponse {
   paymentRef: string;
   payUrl: string;
   qrString: string | null;
+  qrDataUrl: string | null;
   qrLink: string | null;
   trxId: string | null;
+  expiresAt: string | null;
   totalAmount: number;
   orderIds: string[];
+}
+
+interface PaymentSession {
+  paymentRef: string;
+  qrDataUrl: string;
+  payUrl: string;
+  expiresAt: string | null;
+  totalAmount: number;
 }
 
 const ADMIN_FEE = 0;
@@ -40,6 +50,55 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [hydrationDone, setHydrationDone] = useState(false);
   const [publicGateways, setPublicGateways] = useState<PublicGateway[] | null>(null);
+  /** Aktif kalau backend sudah create Pakasir transaction — render QR + polling. */
+  const [paySession, setPaySession] = useState<PaymentSession | null>(null);
+  const [pollStatus, setPollStatus] = useState<string>("pending");
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  // Polling status setelah QR muncul. Stop kalau paid/delivered (redirect ke success)
+  // atau failed (show error). Interval 5 detik.
+  useEffect(() => {
+    if (!paySession) return;
+    let alive = true;
+    const tick = async () => {
+      try {
+        const res = await fetch(
+          `/api/payments/${encodeURIComponent(paySession.paymentRef)}/status`
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { status?: string };
+        if (!alive) return;
+        if (data.status) setPollStatus(data.status);
+        if (data.status === "paid" || data.status === "delivered") {
+          router.push(`/checkout/success?ref=${paySession.paymentRef}`);
+        }
+      } catch {
+        /* silent */
+      }
+    };
+    tick();
+    const iv = setInterval(tick, 5000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [paySession, router]);
+
+  // Countdown expires_at.
+  useEffect(() => {
+    if (!paySession?.expiresAt) {
+      setSecondsLeft(null);
+      return;
+    }
+    const exp = new Date(paySession.expiresAt).getTime();
+    const tick = () => {
+      const s = Math.max(0, Math.floor((exp - Date.now()) / 1000));
+      setSecondsLeft(s);
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [paySession]);
 
   // Fetch enabled gateways dari /api/gateways/public. Fall back ke
   // PAYMENT_METHODS mock kalau API gagal atau Supabase belum di-konfig.
@@ -173,10 +232,21 @@ export default function CheckoutPage() {
           ("error" in data && data.error) || "Checkout gagal di gateway"
         );
       }
-      // Voucher.used sudah di-increment server-side di /api/checkout
+      // Voucher.used sudah di-increment server-side di /api/checkout.
+      // Inline QR render: simpan session, client tampilkan QR + polling status.
+      // Kalau qrDataUrl gak ada (fallback), redirect ke Pakasir hosted page.
       clearCart();
-      // Redirect ke Pakasir hosted payment page (QRIS).
-      // Sukses → Pakasir redirect balik ke /checkout/success?ref=PAYMENT_REF
+      if (data.qrDataUrl) {
+        setPaySession({
+          paymentRef: data.paymentRef,
+          qrDataUrl: data.qrDataUrl,
+          payUrl: data.payUrl,
+          expiresAt: data.expiresAt,
+          totalAmount: data.totalAmount,
+        });
+        setPaying(false);
+        return;
+      }
       window.location.href = data.payUrl;
     } catch (e) {
       // Fallback: legacy flow create order langsung. Disable kalau Pakasir
@@ -490,70 +560,120 @@ export default function CheckoutPage() {
               </div>
 
               {method === "qris" && (
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 20,
-                    background: "#F8F5FF",
-                    borderRadius: 16,
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ fontWeight: 700, marginBottom: 10, color: "var(--ink)" }}>
-                    Scan QRIS
-                  </div>
+                paySession ? (
                   <div
                     style={{
-                      width: 160,
-                      height: 160,
-                      margin: "0 auto",
-                      borderRadius: 14,
-                      background: "white",
-                      backgroundImage: `
-                        linear-gradient(45deg, var(--ink) 25%, transparent 25%),
-                        linear-gradient(-45deg, var(--ink) 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, var(--ink) 75%),
-                        linear-gradient(-45deg, transparent 75%, var(--ink) 75%)`,
-                      backgroundSize: "14px 14px",
-                      backgroundPosition: "0 0, 0 7px, 7px -7px, -7px 0px",
-                      border: "2px solid var(--ink)",
-                      position: "relative",
+                      marginTop: 20,
+                      padding: 24,
+                      background: "#F8F5FF",
+                      borderRadius: 16,
+                      textAlign: "center",
                     }}
                   >
+                    <div style={{ fontWeight: 700, marginBottom: 14, color: "var(--ink)" }}>
+                      Scan QRIS untuk bayar
+                    </div>
                     <div
                       style={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%,-50%)",
+                        width: 240,
+                        height: 240,
+                        margin: "0 auto",
+                        borderRadius: 14,
                         background: "white",
-                        padding: 8,
-                        borderRadius: 8,
+                        padding: 10,
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
                       }}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={paySession.qrDataUrl}
+                        alt="QRIS payment code"
+                        style={{ width: "100%", height: "100%", display: "block" }}
+                      />
+                    </div>
+                    {secondsLeft !== null && (
                       <div
                         style={{
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 800,
-                          fontSize: 11,
-                          color: "var(--ink)",
+                          fontSize: 12,
+                          color: secondsLeft < 60 ? "#DC2626" : "var(--ink-soft)",
+                          marginTop: 12,
+                          fontWeight: secondsLeft < 60 ? 700 : 500,
                         }}
                       >
-                        QRIS
+                        Berlaku {Math.floor(secondsLeft / 60)}:
+                        {String(secondsLeft % 60).padStart(2, "0")}
                       </div>
+                    )}
+                    <div
+                      style={{
+                        marginTop: 14,
+                        padding: "8px 12px",
+                        background: "white",
+                        borderRadius: 10,
+                        fontSize: 12,
+                        color: "var(--ink-soft)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: pollStatus === "pending" ? "#F59E0B" : "#0F8B5C",
+                          animation: pollStatus === "pending" ? "pulse 1.5s ease-in-out infinite" : undefined,
+                          display: "inline-block",
+                        }}
+                      />
+                      {pollStatus === "pending"
+                        ? "Menunggu pembayaran…"
+                        : pollStatus === "paid" || pollStatus === "delivered"
+                          ? "Pembayaran diterima — mengalihkan…"
+                          : pollStatus === "failed"
+                            ? "Pembayaran gagal"
+                            : pollStatus}
                     </div>
+                    <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 10 }}>
+                      Scan dari GoPay, DANA, OVO, ShopeePay, atau m-banking apapun
+                    </div>
+                    <style jsx>{`
+                      @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.3; }
+                      }
+                    `}</style>
                   </div>
+                ) : (
                   <div
-                    style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 10 }}
+                    style={{
+                      marginTop: 20,
+                      padding: 18,
+                      background: "#F8F5FF",
+                      borderRadius: 16,
+                      textAlign: "center",
+                      fontSize: 12,
+                      color: "var(--ink-soft)",
+                    }}
                   >
-                    Berlaku 15 menit
+                    Klik <strong style={{ color: "var(--ink)" }}>Bayar</strong> untuk
+                    munculkan QRIS yang bisa di-scan.
                   </div>
-                </div>
+                )
               )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
                 <button
-                  onClick={() => setStep(1)}
+                  onClick={() => {
+                    if (paySession) {
+                      // Cancel: clear session, kembali ke step 1.
+                      setPaySession(null);
+                      setPollStatus("pending");
+                    }
+                    setStep(1);
+                  }}
                   style={{
                     padding: "14px 20px",
                     borderRadius: 14,
@@ -570,7 +690,7 @@ export default function CheckoutPage() {
                 </button>
                 <button
                   onClick={handlePay}
-                  disabled={paying}
+                  disabled={paying || !!paySession}
                   style={{
                     flex: 1,
                     padding: "14px",
