@@ -624,8 +624,8 @@ export default function CheckoutPage() {
                           height: 8,
                           borderRadius: "50%",
                           background: pollStatus === "pending" ? "#F59E0B" : "#0F8B5C",
-                          animation: pollStatus === "pending" ? "pulse 1.5s ease-in-out infinite" : undefined,
                           display: "inline-block",
+                          opacity: pollStatus === "pending" ? 0.85 : 1,
                         }}
                       />
                       {pollStatus === "pending"
@@ -639,12 +639,6 @@ export default function CheckoutPage() {
                     <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 10 }}>
                       Scan dari GoPay, DANA, OVO, ShopeePay, atau m-banking apapun
                     </div>
-                    <style jsx>{`
-                      @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.3; }
-                      }
-                    `}</style>
                   </div>
                 ) : (
                   <div
