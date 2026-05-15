@@ -590,8 +590,18 @@ export function TopBar() {
             Katalog
           </NavBtn>
           <NavBtn
-            href={user ? "/dashboard" : "/login"}
-            active={pathname === "/dashboard" || pathname === "/login"}
+            href={
+              user
+                ? user.role === "admin"
+                  ? "/admin"
+                  : "/dashboard"
+                : "/login"
+            }
+            active={
+              pathname === "/dashboard" ||
+              pathname === "/login" ||
+              pathname.startsWith("/admin")
+            }
           >
             {user ? user.name.split(" ")[0] : "Masuk"}
           </NavBtn>

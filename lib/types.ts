@@ -81,6 +81,8 @@ export interface StoreUser {
   email: string;
   phone?: string;
   joinedAt?: string;
+  /** "admin" untuk staff lapakurab — tombol user di topbar arah ke /admin. */
+  role?: "user" | "admin";
 }
 
 export type Currency = "IDR" | "USD";

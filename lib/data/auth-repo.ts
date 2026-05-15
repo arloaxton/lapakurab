@@ -138,7 +138,12 @@ export async function getCurrentUser(): Promise<StoreUser | null> {
     const res = await fetch("/api/auth/session", { credentials: "include" });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.user ?? null;
+    if (!data?.user) return null;
+    // Merge role dari session response ke user object
+    return {
+      ...data.user,
+      role: data.role === "admin" ? "admin" : "user",
+    } as StoreUser;
   } catch {
     return null;
   }
