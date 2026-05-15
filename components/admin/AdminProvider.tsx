@@ -88,6 +88,9 @@ function applyUpdater<T>(prev: T, fn: Updater<T>): T {
 
 interface AdminApi extends AdminState {
   authed: boolean;
+  /** True setelah hydration selesai (session + data API resolve). UI auth
+   *  guard pakai ini untuk distinguish "loading" vs "not authenticated". */
+  hydrated: boolean;
   login: () => void;
   logout: () => void;
 
@@ -157,8 +160,24 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Step 1: session check (priority — UI gate-keeper). Set authed +
+    // hydrated SECEPATNYA setelah session resolve, jangan tunggu 10 fetch
+    // data lain. Data lain di-fetch paralel di background — kalau lambat,
+    // table tampil dengan mock/empty (loading state per-page).
+    fetchJSON<{ user: unknown; role: string }>("/api/auth/session")
+      .then((session) => {
+        if (!alive) return;
+        setAuthed(Boolean(session?.user && session?.role === "admin"));
+        setHydrated(true);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setAuthed(false);
+        setHydrated(true);
+      });
+
+    // Step 2: data fetches (background, settled independently)
     Promise.all([
-      fetchJSON<{ user: unknown; role: string }>("/api/auth/session"),
       fetchJSON<{ products: Product[] }>("/api/products?activeOnly=false"),
       fetchJSON<{ orders: AdminOrder[] }>("/api/orders?scope=all"),
       fetchJSON<{ stock: StockItem[] }>("/api/stock"),
@@ -168,9 +187,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       fetchJSON<{ notifications: AdminNotification[] }>("/api/notifications"),
       fetchJSON<{ settings: AdminSettings }>("/api/settings"),
       fetchJSON<{ gateways: Gateway[] }>("/api/gateways"),
-    ]).then(([session, prods, ords, stk, vchs, usrs, aud, notifs, sets, gws]) => {
+    ]).then(([prods, ords, stk, vchs, usrs, aud, notifs, sets, gws]) => {
       if (!alive) return;
-      setAuthed(Boolean(session?.user && session?.role === "admin"));
       setData((d) => ({
         ...d,
         products: Array.isArray(prods?.products) ? prods.products : d.products,
@@ -185,7 +203,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         settings: sets?.settings ?? d.settings,
         gateways: Array.isArray(gws?.gateways) ? gws.gateways : d.gateways,
       }));
-      setHydrated(true);
+    }).catch(() => {
+      /* silent — data fallback ke seed/mock yang sudah loaded */
     });
 
     // Realtime subscribe (Phase 5 — live admin notifications + orders)
@@ -504,6 +523,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const api: AdminApi = {
     ...data,
     authed,
+    hydrated,
     login,
     logout,
     darkMode,

@@ -11,17 +11,17 @@ import type { CommandItem } from "@/lib/types";
 
 export default function AdminPanelLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { authed, logout } = useAdmin();
+  const { authed, hydrated, logout } = useAdmin();
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // Redirect HANYA setelah hydration confirmed unauthenticated.
+  // Sebelumnya: 50ms setTimeout race redirect kalau hydration > 50ms
+  // (fetch session dari /api/auth/session bisa 200ms+).
   useEffect(() => {
-    if (!authed) {
-      const t = setTimeout(() => {
-        if (!authed) router.replace("/admin/login");
-      }, 50);
-      return () => clearTimeout(t);
+    if (hydrated && !authed) {
+      router.replace("/admin/login");
     }
-  }, [authed, router]);
+  }, [hydrated, authed, router]);
 
   // Cmd/Ctrl+K opens palette
   useKey("$mod+k", (e) => {
@@ -30,7 +30,10 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
     setPaletteOpen((s) => !s);
   }, [authed]);
 
-  if (!authed) {
+  // Loading state: tunggu hydration selesai. Kalau setelah hydration
+  // ternyata !authed, useEffect di atas akan redirect — tampilkan
+  // loading spinner sementara.
+  if (!hydrated || !authed) {
     return (
       <div
         style={{
@@ -42,7 +45,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
           fontSize: 13,
         }}
       >
-        Memeriksa sesi…
+        {hydrated ? "Mengarahkan…" : "Memeriksa sesi…"}
       </div>
     );
   }
