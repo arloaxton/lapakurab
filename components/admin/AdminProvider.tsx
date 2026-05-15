@@ -153,9 +153,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     const fetchJSON = async <T,>(path: string): Promise<T | null> => {
       try {
         const res = await fetch(path, { credentials: "include" });
-        if (!res.ok) return null;
+        if (!res.ok) {
+          console.warn(`[admin-hydrate] ${path} → HTTP ${res.status}`);
+          return null;
+        }
         return (await res.json()) as T;
-      } catch {
+      } catch (e) {
+        console.warn(`[admin-hydrate] ${path} → network error`, e);
         return null;
       }
     };
@@ -309,35 +313,30 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [darkMode, hydrated]);
 
-  // Auto-pause produk yang stoknya 0 (kalau setting aktif)
+  // Auto-pause produk yang stoknya 0 (kalau setting aktif).
+  // SINGLE setData call (batch products + notifications) untuk hindari
+  // multiple re-render saat banyak produk out-of-stock sekaligus.
   useEffect(() => {
     if (!hydrated) return;
     if (!data.settings?.autoPauseOutOfStock) return;
     const toToggle = data.products.filter((p) => p.stock === 0 && p.active);
-    if (toToggle.length > 0) {
-      setData((d) => ({
-        ...d,
-        products: d.products.map((p) =>
-          p.stock === 0 && p.active ? { ...p, active: false } : p
-        ),
-      }));
-      toToggle.forEach((p) =>
-        setData((d) => ({
-          ...d,
-          notifications: [
-            {
-              id: "n" + Date.now() + Math.random(),
-              at: new Date().toISOString(),
-              kind: "warn" as NotificationKind,
-              title: `Auto-pause: ${p.name}`,
-              body: "Produk dinonaktifkan otomatis karena stok habis.",
-              read: false,
-            },
-            ...d.notifications,
-          ].slice(0, 100),
-        }))
-      );
-    }
+    if (toToggle.length === 0) return;
+    const now = Date.now();
+    const newNotifs: AdminNotification[] = toToggle.map((p, i) => ({
+      id: `n${now}${i}${Math.random().toString(36).slice(2, 6)}`,
+      at: new Date().toISOString(),
+      kind: "warn" as NotificationKind,
+      title: `Auto-pause: ${p.name}`,
+      body: "Produk dinonaktifkan otomatis karena stok habis.",
+      read: false,
+    }));
+    setData((d) => ({
+      ...d,
+      products: d.products.map((p) =>
+        p.stock === 0 && p.active ? { ...p, active: false } : p
+      ),
+      notifications: [...newNotifs, ...d.notifications].slice(0, 100),
+    }));
   }, [hydrated, data.products, data.settings?.autoPauseOutOfStock]);
 
   const updateProducts = useCallback(
