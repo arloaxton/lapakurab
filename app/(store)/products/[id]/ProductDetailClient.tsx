@@ -34,8 +34,6 @@ export default function ProductDetailClient({
   );
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"detail" | "reviews" | "how">("detail");
-  const [countdown, setCountdown] = useState({ h: 5, m: 42, s: 18 });
-  const [activeThumb, setActiveThumb] = useState(0);
   // accountType: hanya bisa "sharing" kalau produk punya priceSharingIDR.
   const hasSharing = Boolean(product.priceSharingIDR && product.priceSharingIDR > 0);
   // Default: kalau private habis tapi sharing ada, start dari sharing.
@@ -50,26 +48,6 @@ export default function ProductDetailClient({
     setQty((q) => Math.max(1, Math.min(q, availableStock || 1)));
   }, [availableStock]);
   const btnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setCountdown((c) => {
-        let { h, m, s } = c;
-        s--;
-        if (s < 0) {
-          s = 59;
-          m--;
-          if (m < 0) {
-            m = 59;
-            h--;
-            if (h < 0) h = 23;
-          }
-        }
-        return { h, m, s };
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const mult = DUR_MULTIPLIER[duration] || 1;
   // Base price tergantung tipe akun yang dipilih
@@ -133,35 +111,12 @@ export default function ProductDetailClient({
           >
             <div style={{ width: "100%", maxWidth: 420, margin: "0 auto" }}>
               <ProductTile
-                hue={product.hue + activeThumb * 30}
+                hue={product.hue}
                 emoji={product.emoji}
                 imageUrl={product.imageUrl}
                 size="100%"
                 rounded={24}
               />
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              {[0, 1, 2, 3].map((i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveThumb(i)}
-                  aria-label={`Variasi ${i + 1}`}
-                  style={{
-                    flex: 1,
-                    height: 60,
-                    borderRadius: 12,
-                    padding: 0,
-                    background: `oklch(0.${88 - i * 3} 0.1${3 - i} ${product.hue + i * 30})`,
-                    border:
-                      activeThumb === i
-                        ? "2px solid var(--primary)"
-                        : "1.5px solid var(--border)",
-                    cursor: "pointer",
-                    transition: "border 0.15s, transform 0.15s",
-                    transform: activeThumb === i ? "scale(1.03)" : "scale(1)",
-                  }}
-                />
-              ))}
             </div>
           </div>
         </div>
@@ -240,71 +195,6 @@ export default function ProductDetailClient({
             <span style={{ color: "var(--ink-soft)", fontSize: 14 }}>
               ({product.reviews.toLocaleString("id-ID")} ulasan)
             </span>
-          </div>
-
-          {/* Flash deal countdown */}
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 16,
-              marginBottom: 24,
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: "#DC2626",
-                  letterSpacing: "0.05em",
-                  marginBottom: 4,
-                }}
-              >
-                ⚡ FLASH DEAL BERAKHIR
-              </div>
-              <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-                Buruan, harga normal kembali setelah ini!
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {[
-                { n: countdown.h, l: "jam" },
-                { n: countdown.m, l: "mnt" },
-                { n: countdown.s, l: "dtk" },
-              ].map((t, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "var(--ink)",
-                    color: "white",
-                    padding: "8px 12px",
-                    borderRadius: 10,
-                    textAlign: "center",
-                    minWidth: 46,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 18,
-                      fontWeight: 800,
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {String(t.n).padStart(2, "0")}
-                  </div>
-                  <div style={{ fontSize: 9, opacity: 0.7, marginTop: 2 }}>
-                    {t.l}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Duration picker */}
