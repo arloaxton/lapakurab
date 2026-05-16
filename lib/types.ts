@@ -66,6 +66,8 @@ export interface CustomerOrder {
   /** Retail price snapshot (product.oldIDR saat order — dari JOIN).
    *  Untuk compute "Total hemat" di dashboard. 0 = no saving. */
   retailIDR?: number;
+  /** Tipe akun: private (full akun) atau sharing (1 profil). */
+  accountType: AccountType;
   status: "Aktif" | "Selesai" | "Dibatalkan";
   daysLeft: number;
 }

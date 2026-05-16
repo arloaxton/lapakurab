@@ -34,6 +34,7 @@ export interface OrderRow {
   payment_trx_id: string | null;
   qr_string: string | null;
   notes: string | null;
+  account_type: "private" | "sharing";
   delivered_at: string | null;
   expires_at: string | null;
   created_at: string;
@@ -83,6 +84,7 @@ function rowToCustomerOrder(r: OrderRow & { products?: { old_idr: number | null 
     duration: r.duration,
     total: r.total_idr,
     retailIDR: retailIDR ?? undefined,
+    accountType: r.account_type ?? "private",
     status,
     daysLeft,
   };

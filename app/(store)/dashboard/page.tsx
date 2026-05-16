@@ -640,7 +640,18 @@ function DashboardInner() {
                           >
                             {o.product}
                           </div>
-                          <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{o.duration}</div>
+                          <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>
+                            {o.duration}
+                            {" · "}
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                color: o.accountType === "sharing" ? "#92400E" : "#1E40AF",
+                              }}
+                            >
+                              {o.accountType === "sharing" ? "Sharing" : "Private"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div
@@ -853,6 +864,23 @@ function DashboardInner() {
                                 }}
                               />
                               {expiringSoon ? "Akan berakhir" : "Aktif"}
+                            </span>
+                            <span
+                              style={{
+                                padding: "1px 7px",
+                                borderRadius: 4,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                background: o.accountType === "sharing" ? "#FEF3C7" : "#DBEAFE",
+                                color: o.accountType === "sharing" ? "#92400E" : "#1E40AF",
+                                border: `1px solid ${
+                                  o.accountType === "sharing"
+                                    ? "rgba(146,64,14,0.2)"
+                                    : "rgba(30,64,175,0.2)"
+                                }`,
+                              }}
+                            >
+                              {o.accountType === "sharing" ? "Sharing" : "Private"}
                             </span>
                           </div>
                           <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
