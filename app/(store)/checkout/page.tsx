@@ -65,17 +65,31 @@ export default function CheckoutPage() {
   const [pollStatus, setPollStatus] = useState<string>("pending");
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
-  // Polling status setelah QR muncul. Stop kalau paid/delivered (redirect ke success)
-  // atau failed (show error). Interval 5 detik.
+  // Polling status setelah QR muncul. Stop kalau paid/delivered (redirect
+  // ke success) atau failed (show error). Setiap 3rd poll → ?sync=1 untuk
+  // force re-check Pakasir (fallback kalau webhook delayed).
+  // Setelah 30 poll (~150 detik), kalau masih pending, force redirect ke
+  // success page yang akan handle final state (anti-stuck UI).
   useEffect(() => {
     if (!paySession) return;
     let alive = true;
+    let pollCount = 0;
     const tick = async () => {
+      pollCount += 1;
+      const sync = pollCount % 3 === 0 ? "?sync=1" : "";
       try {
         const res = await fetch(
-          `/api/payments/${encodeURIComponent(paySession.paymentRef)}/status`
+          `/api/payments/${encodeURIComponent(paySession.paymentRef)}/status${sync}`
         );
-        if (!res.ok) return;
+        if (!res.ok) {
+          // 404 = ref belum ke-attach (RLS bug atau race) → kalau sudah
+          // >5 poll dan masih 404, bounce ke success page untuk handle
+          // final state (success page bisa re-poll dengan ?ref).
+          if (alive && pollCount > 5) {
+            router.push(`/checkout/success?ref=${paySession.paymentRef}`);
+          }
+          return;
+        }
         const data = (await res.json()) as { status?: string };
         if (!alive) return;
         if (data.status) setPollStatus(data.status);
@@ -83,7 +97,13 @@ export default function CheckoutPage() {
           router.push(`/checkout/success?ref=${paySession.paymentRef}`);
         }
       } catch {
-        /* silent */
+        /* silent retry */
+      }
+      // Safety net: kalau setelah ~150 detik tetap pending, redirect ke
+      // success page (yang akan tampilkan "Menunggu pembayaran" UI dgn
+      // poll terus, jadi user gak stuck di QR screen forever).
+      if (alive && pollCount >= 30) {
+        router.push(`/checkout/success?ref=${paySession.paymentRef}`);
       }
     };
     tick();
