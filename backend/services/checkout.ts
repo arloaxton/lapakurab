@@ -156,8 +156,9 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     });
   } catch (e) {
     // Cleanup: orders sudah ke-insert tapi gateway gagal. Tandai 'failed'.
-    const { getServerClient } = await import("../db/server-client");
-    const sb = await getServerClient();
+    // Pakai admin client — orders RLS hanya allow UPDATE oleh admin.
+    const { getAdminClient } = await import("../db/server-client");
+    const sb = getAdminClient();
     await sb.from("orders").update({ status: "failed" }).in("id", orderIds);
     throw e;
   }

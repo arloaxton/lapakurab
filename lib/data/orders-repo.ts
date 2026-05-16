@@ -214,10 +214,13 @@ export async function createOrder(
     );
     if (claimed) {
       // Set expires_at = sekarang + durasi langganan (mis. "1 Bulan" = 30 hari)
+      // Pakai admin client — orders RLS hanya allow UPDATE oleh admin.
       const { durationToDays } = await import("@/lib/duration");
+      const { getAdminClient } = await import("@/backend/db/server-client");
       const days = durationToDays(input.duration);
       const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-      await sb.from("orders").update({ expires_at: expiresAt }).eq("id", id);
+      const sbAdmin = getAdminClient();
+      await sbAdmin.from("orders").update({ expires_at: expiresAt }).eq("id", id);
     }
     // Re-fetch order (status bisa berubah ke 'delivered' kalau stock ke-claim)
     const { data: refreshed } = await sb
@@ -291,7 +294,9 @@ export async function createPendingOrder(
   return { id };
 }
 
-/** Attach payment metadata ke beberapa order sekaligus (by id list). */
+/** Attach payment metadata ke beberapa order sekaligus (by id list).
+ *  WAJIB pakai admin client (bypass RLS) — orders RLS hanya allow
+ *  UPDATE oleh admin, sementara ini di-trigger dari checkout flow user. */
 export async function attachPaymentToOrders(
   orderIds: string[],
   paymentRef: string,
@@ -300,8 +305,8 @@ export async function attachPaymentToOrders(
   qrString: string | null
 ): Promise<void> {
   if (!isSupabaseConfigured() || orderIds.length === 0) return;
-  const { getServerClient } = await import("@/backend/db/server-client");
-  const sb = await getServerClient();
+  const { getAdminClient } = await import("@/backend/db/server-client");
+  const sb = getAdminClient();
   const { error } = await sb
     .from("orders")
     .update({
@@ -336,8 +341,10 @@ export async function settlePaymentRef(paymentRef: string): Promise<{
   delivered: number;
 }> {
   if (!isSupabaseConfigured()) return { updated: 0, delivered: 0 };
-  const { getServerClient } = await import("@/backend/db/server-client");
-  const sb = await getServerClient();
+  // WAJIB admin client — settle dipanggil dari webhook (no user session)
+  // dan dari status-check route. Orders RLS hanya allow UPDATE oleh admin.
+  const { getAdminClient } = await import("@/backend/db/server-client");
+  const sb = getAdminClient();
   const orders = await findOrdersByPaymentRef(paymentRef);
   const pending = orders.filter((o) => o.status === "pending");
 
