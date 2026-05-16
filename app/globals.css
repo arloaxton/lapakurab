@@ -612,10 +612,10 @@ body.lk-no-scroll { overflow: hidden; }
     gap: 8px !important;
     padding: 10px 14px !important;
   }
-  /* Hide full search input — replace dengan icon button di nav */
+  /* Mobile topbar minimal: Logo · Katalog · Cart · Avatar */
   .lk-topbar-search { display: none !important; }
-  .lk-mobile-search-btn { display: inline-flex !important; }
   .lk-topbar-cart-text { display: none !important; }
+  .lk-hide-mobile { display: none !important; }
 }
 @media (max-width: 420px) {
   .lk-topbar-nav-text { display: none !important; }

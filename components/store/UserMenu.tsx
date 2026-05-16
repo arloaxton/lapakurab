@@ -146,7 +146,7 @@ export function UserMenu() {
             }
           >
             <span style={{ fontSize: 14 }}>📊</span>
-            Profil & langganan
+            Dashboard
           </Link>
 
           <button
