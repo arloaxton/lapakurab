@@ -33,7 +33,12 @@ export interface CheckoutResult {
   subtotal: number;
   discount: number;
   adminFee: number;
+  /** Subtotal yang dikirim ke Pakasir (subtotal - discount + adminFee). */
   totalAmount: number;
+  /** Fee dari Pakasir (kalau "pass to buyer" diaktifkan di Pakasir dashboard). */
+  pakasirFee: number;
+  /** Total final yang customer bayar via QRIS = totalAmount + pakasirFee. */
+  customerPays: number;
   orderIds: string[];
 }
 
@@ -199,6 +204,9 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     }
   }
 
+  const pakasirFee = pakasirData.fee ?? 0;
+  const customerPays = pakasirData.total_payment ?? (totalAmount + pakasirFee);
+
   return {
     paymentRef,
     payUrl,
@@ -211,6 +219,8 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     discount,
     adminFee,
     totalAmount,
+    pakasirFee,
+    customerPays,
     orderIds,
   };
 }

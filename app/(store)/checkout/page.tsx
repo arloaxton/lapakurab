@@ -23,6 +23,8 @@ interface CheckoutResponse {
   trxId: string | null;
   expiresAt: string | null;
   totalAmount: number;
+  pakasirFee: number;
+  customerPays: number;
   orderIds: string[];
 }
 
@@ -41,6 +43,8 @@ interface PaymentSession {
   payUrl: string;
   expiresAt: string | null;
   totalAmount: number;
+  pakasirFee: number;
+  customerPays: number;
   items: PaymentSessionItem[];
 }
 
@@ -291,6 +295,8 @@ export default function CheckoutPage() {
           payUrl: data.payUrl,
           expiresAt: data.expiresAt,
           totalAmount: data.totalAmount,
+          pakasirFee: data.pakasirFee,
+          customerPays: data.customerPays,
           items: itemsSnapshot,
         });
         clearCart();
@@ -771,7 +777,7 @@ export default function CheckoutPage() {
                       Memproses...
                     </span>
                   ) : (
-                    `Bayar ${fmt(total)} →`
+                    `Bayar ${fmt(paySession ? paySession.customerPays : total)} →`
                   )}
                 </button>
               </div>
@@ -884,10 +890,19 @@ export default function CheckoutPage() {
                 valueColor="#0F8B5C"
               />
             )}
+            {paySession && paySession.pakasirFee > 0 && (
+              <Row
+                label="Biaya QRIS"
+                value={fmt(paySession.pakasirFee)}
+                valueColor="var(--ink-soft)"
+              />
+            )}
           </div>
           <Row
             label="Total"
-            value={fmt(paySession ? paySession.totalAmount : total)}
+            value={fmt(
+              paySession ? paySession.customerPays : total
+            )}
             bold
           />
         </aside>
