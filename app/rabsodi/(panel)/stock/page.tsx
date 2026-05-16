@@ -8,7 +8,8 @@ import { BulkBar } from "@/components/admin/BulkBar";
 import { StatusPill } from "@/components/admin/StatusPill";
 import { AddStockModal } from "@/components/admin/modals/AddStockModal";
 import type { AddStockForm } from "@/components/admin/modals/AddStockModal";
-import { primaryBtn, dangerMiniBtn, chipStyle } from "@/components/admin/ui-styles";
+import { primaryBtn, dangerMiniBtn, miniBtn, chipStyle } from "@/components/admin/ui-styles";
+import { EditStockModal } from "@/components/admin/modals/EditStockModal";
 import { CredentialReveal } from "@/components/shared/CredentialReveal";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -23,6 +24,7 @@ import { isSupabaseConfigured } from "@/backend/env";
 import {
   bulkCreateStockClient,
   deleteStockClient,
+  updateStockClient,
 } from "@/lib/data/stock-client";
 
 export default function AdminStockPage() {
@@ -31,11 +33,29 @@ export default function AdminStockPage() {
   const confirm = useConfirm();
   const [filter, setFilter] = usePersistedFilter<string>("filter", "all");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<StockItem | null>(null);
 
   const filtered =
     filter === "all" ? stock : stock.filter((s) => s.productId === filter);
 
   const useApi = isSupabaseConfigured();
+
+  const handleEditSave = async (id: string, patch: Partial<StockItem>) => {
+    if (useApi) {
+      const updated = await updateStockClient(id, {
+        field1: patch.field1,
+        field2: patch.field2,
+        field3: patch.field3,
+        notes: patch.notes,
+        status: patch.status,
+      });
+      updateStock((list) => list.map((s) => (s.id === id ? updated : s)));
+    } else {
+      updateStock((list) => list.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    }
+    toast.success("Stok diperbarui");
+    setEditing(null);
+  };
 
   const addStock = async (form: AddStockForm) => {
     // Parse each line as: field1 | field2 | field3 | notes (semua opsional kecuali field1).
@@ -195,7 +215,7 @@ export default function AdminStockPage() {
       <BulkBar selection={stockSel} actions={stockBulkActions} />
 
       <TableShell
-        columns={["Produk", "Tipe", "Field 1", "Field 2", "Status", "Ditambahkan", ""]}
+        columns={["Produk", "Tipe", "Field 1", "Field 2", "Field 3", "Status", "Ditambahkan", ""]}
         ids={paged.items.map((s) => s.id)}
         selection={stockSel}
         rows={paged.items.map((s) => {
@@ -203,6 +223,7 @@ export default function AdminStockPage() {
           const fmt = prod ? getCredentialFormat(prod.credentialFormat) : null;
           const sensitive1 = fmt?.fields.field1?.sensitive ?? false;
           const sensitive2 = fmt?.fields.field2?.sensitive ?? true;
+          const sensitive3 = fmt?.fields.field3?.sensitive ?? true;
           const isSharing = s.accountType === "sharing";
           return [
             <span key="p" style={{ fontWeight: 500, fontSize: 13, color: "var(--ink)" }}>
@@ -227,13 +248,23 @@ export default function AdminStockPage() {
             ) : (
               <span key="f2" style={{ color: "var(--ink-soft)", fontSize: 12 }}>—</span>
             ),
+            s.field3 ? (
+              <CredentialReveal key="f3" value={s.field3} masked={sensitive3} />
+            ) : (
+              <span key="f3" style={{ color: "var(--ink-soft)", fontSize: 12 }}>—</span>
+            ),
             <StatusPill key="s" status={s.status} />,
             <span key="a" style={{ fontSize: 12, color: "var(--ink-soft)" }}>
               {fmtDate(s.addedAt)}
             </span>,
-            <button key="del" onClick={() => removeItem(s.id)} style={dangerMiniBtn}>
-              Hapus
-            </button>,
+            <div key="actions" style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setEditing(s)} style={miniBtn}>
+                Edit
+              </button>
+              <button onClick={() => removeItem(s.id)} style={dangerMiniBtn}>
+                Hapus
+              </button>
+            </div>,
           ];
         })}
         empty="Belum ada stok kredensial"
@@ -253,6 +284,14 @@ export default function AdminStockPage() {
           products={products}
           onClose={() => setAdding(false)}
           onSave={addStock}
+        />
+      )}
+      {editing && (
+        <EditStockModal
+          stock={editing}
+          products={products}
+          onClose={() => setEditing(null)}
+          onSave={handleEditSave}
         />
       )}
     </div>
