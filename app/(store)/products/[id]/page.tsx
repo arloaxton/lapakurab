@@ -5,34 +5,53 @@
 
 import { notFound } from "next/navigation";
 import { getProductById } from "@/lib/data/products-repo";
-import { listStock } from "@/lib/data/stock-repo";
+import { isSupabaseConfigured } from "@/backend/env";
 import ProductDetailClient from "./ProductDetailClient";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-// ISR: cache product detail HTML 60 detik. Saat update via admin, halaman
-// stale tapi akan revalidate next request. Trade-off vs full dynamic.
-export const revalidate = 60;
+// Dynamic — stock count harus real-time, ISR bikin stale. Trade-off
+// kecil: page render tiap request, tapi product detail bukan high-traffic
+// path yang butuh aggressive caching.
+export const dynamic = "force-dynamic";
+
+/**
+ * Count stock available per accountType pakai ADMIN CLIENT (bypass RLS).
+ * RLS stock_items normalnya cuma allow admin atau owner — guest/customer
+ * yang akses product page gak bisa lihat available pool. Stock count itu
+ * info publik (sama dengan "X tersedia"), jadi safe bypass RLS untuk count.
+ */
+async function getStockCounts(productId: string): Promise<{ priv: number; share: number }> {
+  if (!isSupabaseConfigured()) return { priv: 0, share: 0 };
+  try {
+    const { getAdminClient } = await import("@/backend/db/server-client");
+    const sb = getAdminClient();
+    const { data, error } = await sb
+      .from("stock_items")
+      .select("account_type")
+      .eq("product_id", productId)
+      .eq("status", "available");
+    if (error || !data) return { priv: 0, share: 0 };
+    let priv = 0;
+    let share = 0;
+    for (const row of data as { account_type: string }[]) {
+      if (row.account_type === "sharing") share++;
+      else priv++;
+    }
+    return { priv, share };
+  } catch {
+    return { priv: 0, share: 0 };
+  }
+}
 
 export default async function ProductDetailPage({ params }: Props) {
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
 
-  // Count stock available per tipe akun (untuk tampil di toggle Private/Sharing).
-  let stockPrivate = 0;
-  let stockSharing = 0;
-  try {
-    const all = await listStock({ productId: id, status: "available" });
-    stockPrivate = all.filter((s) => s.accountType === "private").length;
-    stockSharing = all.filter((s) => s.accountType === "sharing").length;
-  } catch {
-    // fallback: pakai product.stock total kalau query gagal
-    stockPrivate = product.stock;
-    stockSharing = 0;
-  }
+  const { priv: stockPrivate, share: stockSharing } = await getStockCounts(id);
 
   return (
     <ProductDetailClient
