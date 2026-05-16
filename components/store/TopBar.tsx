@@ -512,6 +512,39 @@ export function TopBar() {
 
         {/* Nav */}
         <nav style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {/* Mobile-only search button — desktop pakai input bar di atas */}
+          <Link
+            href="/search"
+            className="lk-mobile-search-btn"
+            aria-label="Cari produk"
+            style={{
+              display: "none",
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              border: "1.5px solid var(--border)",
+              background: "var(--surface)",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--ink-soft)",
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </Link>
           <NavBtn href="/catalog" active={pathname === "/catalog"}>
             Katalog
           </NavBtn>
@@ -547,7 +580,21 @@ export function TopBar() {
               textDecoration: "none",
             }}
           >
-            <span>⛛</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
             <span className="lk-topbar-cart-text">Keranjang</span>
             {cartCount > 0 && (
               <span

@@ -608,16 +608,13 @@ body.lk-no-scroll { overflow: hidden; }
 /* ── TopBar mobile tweaks ────────────────────────────────────────────── */
 @media (max-width: 760px) {
   .lk-topbar-inner {
-    flex-wrap: wrap !important;
-    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
     padding: 10px 14px !important;
   }
-  .lk-topbar-search {
-    flex-basis: 100%;
-    max-width: none !important;
-    margin-left: 0 !important;
-    order: 3;
-  }
+  /* Hide full search input — replace dengan icon button di nav */
+  .lk-topbar-search { display: none !important; }
+  .lk-mobile-search-btn { display: inline-flex !important; }
   .lk-topbar-cart-text { display: none !important; }
 }
 @media (max-width: 420px) {
