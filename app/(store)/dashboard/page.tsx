@@ -222,6 +222,18 @@ function DashboardInner() {
 
   const activeOrders = orders.filter((o) => o.status === "Aktif");
   const totalSpent = orders.reduce((s, o) => s + o.total, 0);
+  // Hemat = sum(retailPrice - paidPrice) per order. Retail dari JOIN
+  // products.old_idr di listMyOrders. Fallback ke mock PRODUCTS kalau
+  // gak ada (untuk mock mode tanpa Supabase).
+  const totalSaved = orders.reduce((sum, o) => {
+    let retail = o.retailIDR;
+    if (retail === undefined) {
+      const prod = PRODUCTS.find((p) => p.name === o.product);
+      retail = prod?.oldIDR;
+    }
+    if (!retail || retail <= o.total) return sum;
+    return sum + (retail - o.total);
+  }, 0);
   const nextRenewal = activeOrders.reduce<{
     daysLeft: number;
     product: string;
@@ -476,7 +488,7 @@ function DashboardInner() {
                   { l: "Total order", n: String(orders.length), sub: "sepanjang waktu", big: false },
                   { l: "Aktif", n: String(activeOrders.length), sub: "langganan berjalan", big: false },
                   { l: "Total belanja", n: fmt(totalSpent), sub: "sepanjang waktu", big: true },
-                  { l: "Total hemat", n: fmt(285000), sub: "vs harga retail", big: true },
+                  { l: "Total hemat", n: fmt(totalSaved), sub: "vs harga retail", big: true },
                 ].map((s) => (
                   <div
                     key={s.l}

@@ -56,7 +56,7 @@ function rowToAdminOrder(r: OrderRow): AdminOrder {
   };
 }
 
-function rowToCustomerOrder(r: OrderRow): CustomerOrder {
+function rowToCustomerOrder(r: OrderRow & { products?: { old_idr: number | null } | { old_idr: number | null }[] | null }): CustomerOrder {
   let status: CustomerOrder["status"];
   if (r.status === "refunded" || r.status === "failed") status = "Dibatalkan";
   else if (r.status === "delivered" && r.expires_at && new Date(r.expires_at) < new Date())
@@ -70,12 +70,19 @@ function rowToCustomerOrder(r: OrderRow): CustomerOrder {
     daysLeft = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
   }
 
+  // Retail price dari JOIN products.old_idr (Supabase bisa return single
+  // object atau array tergantung relation cardinality).
+  const rel = r.products;
+  const productObj = Array.isArray(rel) ? rel[0] : rel;
+  const retailIDR = productObj?.old_idr ?? undefined;
+
   return {
     id: r.id,
     date: r.created_at.slice(0, 10),
     product: r.product_name,
     duration: r.duration,
     total: r.total_idr,
+    retailIDR: retailIDR ?? undefined,
     status,
     daysLeft,
   };
@@ -134,7 +141,11 @@ export async function listMyOrders(opts: ListOrdersOpts = {}): Promise<CustomerO
   // Default: HIDE 'pending' (belum dibayar — user masih di checkout flow,
   // jangan tampil seakan order valid) + 'failed' (gateway gagal).
   // Kalau opts.status di-set, override.
-  let q = sb.from("orders").select("*").order("created_at", { ascending: false });
+  // JOIN products(old_idr) untuk hitung "Total hemat" di dashboard customer.
+  let q = sb
+    .from("orders")
+    .select("*, products:product_id(old_idr)")
+    .order("created_at", { ascending: false });
   if (opts.status) {
     q = q.eq("status", opts.status);
   } else {
@@ -143,7 +154,9 @@ export async function listMyOrders(opts: ListOrdersOpts = {}): Promise<CustomerO
   if (opts.limit) q = q.range(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit - 1);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
-  return ((data as OrderRow[] | null) ?? []).map(rowToCustomerOrder);
+  return ((data as unknown as (OrderRow & { products?: { old_idr: number | null } | { old_idr: number | null }[] | null })[] | null) ?? []).map(
+    rowToCustomerOrder
+  );
 }
 
 // ─── Get by id (admin sees any, user sees own via RLS) ──────────────────
