@@ -14,7 +14,6 @@
 
 import { createPendingOrder, attachPaymentToOrders } from "@/lib/data/orders-repo";
 import { findVoucherByCode, redeemVoucher } from "@/lib/data/vouchers-repo";
-import { getSettings } from "@/lib/data/settings-repo";
 import { createPakasirTransaction } from "./payments/pakasir";
 import { env, isPakasirConfigured } from "../env";
 import { getCurrentSession } from "./auth";
@@ -96,9 +95,10 @@ export async function checkoutService(input: CheckoutInput): Promise<CheckoutRes
     discount = computeDiscount(v, subtotal);
   }
 
-  // ─── 3. Admin fee dari settings (default 0 = no fee) ────────────────────
-  const settings = await getSettings();
-  const adminFee = settings.adminFeeIDR ?? 0;
+  // Web admin fee dihapus permanen — fee transaksi ditangani Pakasir
+  // sendiri (potong dari settlement merchant atau pass ke buyer via
+  // setting Pakasir dashboard). Tidak ada additional charge dari web.
+  const adminFee = 0;
 
   // ─── 4. Total final yang di-charge ke customer via Pakasir ──────────────
   const totalAmount = Math.max(0, subtotal - discount + adminFee);
