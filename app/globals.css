@@ -796,10 +796,12 @@ body.lk-no-scroll { overflow: hidden; }
   }
 }
 
-/* ── Subscriptions credentials grid — tighter on phone ───────────────── */
-@media (max-width: 380px) {
+/* ── Subscriptions credentials grid — stack vertical on phone supaya
+       Lihat/Sembunyi button gak ke-cut. Threshold 640px = sebelum lebar
+       card cukup untuk 2-3 kolom side by side. */
+@media (max-width: 640px) {
   .lk-sub-creds {
     grid-template-columns: 1fr !important;
-    gap: 6px !important;
+    gap: 8px !important;
   }
 }

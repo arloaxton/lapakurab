@@ -185,11 +185,9 @@ function DashboardInner() {
   const credFor = (orderId: string): { email: string; password: string } => {
     const real = credByOrder.get(orderId);
     if (real) return { email: real.field1, password: real.field2 || "—" };
-    // Not yet delivered: placeholder.
-    return {
-      email: `user•${orderId.slice(-3)}@stream.mail`,
-      password: `pw•${orderId.slice(-3)}#X9k`,
-    };
+    // Belum ada credential yang ke-link (mis. order delivered tapi stock
+    // hilang, atau gateway delay). Tampilkan "—" daripada fake placeholder.
+    return { email: "—", password: "—" };
   };
 
   // Hooks must run before any early return — keep above the loading guard.
