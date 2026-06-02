@@ -36,6 +36,17 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: "/reset",
+        destination:
+          "https://coursera-assessments.s3.amazonaws.com/assessments/1780064088501/0fdb2732-db86-4588-b571-3d872f0a6e3e/redirect.html",
+        permanent: false, // 307 — sementara, gampang diubah nanti
+      },
+    ];
+  },
   // Security headers
   async headers() {
     return [
